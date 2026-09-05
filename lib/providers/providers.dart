@@ -17,6 +17,7 @@ import '../services/health_service.dart';
 import '../services/notification_service.dart';
 import '../services/reminder_scheduler.dart';
 import '../services/water_scheduler.dart';
+import '../services/widget_service.dart';
 
 // ---- main() içinde override edilen altyapı sağlayıcıları ----
 final sharedPreferencesProvider =
@@ -30,6 +31,7 @@ final alarmServiceProvider = Provider<AlarmService>(
   (ref) => AlarmService(ref.watch(sharedPreferencesProvider), ref.watch(alarmKitServiceProvider)),
 );
 final healthServiceProvider = Provider<HealthService>((_) => HealthService());
+final widgetServiceProvider = Provider<WidgetService>((_) => WidgetService());
 
 final waterRepositoryProvider = Provider((ref) => WaterRepository(ref.watch(databaseProvider)));
 final reminderRepositoryProvider = Provider((ref) => ReminderRepository(ref.watch(databaseProvider)));
@@ -216,8 +218,18 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   }
 
   Future<void> refresh() async {
-    state = AsyncData(await _load(ref.read(settingsProvider)));
+    final s = ref.read(settingsProvider);
+    final st = await _load(s);
+    state = AsyncData(st);
+    await _pushWidget(st, s);
   }
+
+  Future<void> _pushWidget(WaterState st, WaterSettings s) => ref.read(widgetServiceProvider).push(
+        totalMl: st.todayTotalMl,
+        goalMl: s.goalMl,
+        glassMl: s.defaultGlassMl,
+        next: st.nextReminder,
+      );
 
   /// Ayar değişikliğinde: yeniden yükle ve hatırlatmaları kur.
   Future<void> rescheduleReminders() => _refreshAndReschedule();
@@ -226,6 +238,7 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final s = ref.read(settingsProvider);
     final st = await _load(s);
     state = AsyncData(st);
+    await _pushWidget(st, s);
     await ref.read(waterSchedulerProvider).reschedule(
           s: s,
           todayTotalMl: st.todayTotalMl,

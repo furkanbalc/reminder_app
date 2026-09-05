@@ -64,6 +64,27 @@
         </receiver>
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
 
+        <!-- Ana ekran widget'ı -->
+        <receiver
+            android:name=".SuWidgetProvider"
+            android:exported="true"
+            android:label="Su Hatırlatıcı">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/su_widget_info" />
+        </receiver>
+        <!-- home_widget: widget düğmesinden arka planda Dart çalıştırma -->
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

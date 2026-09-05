@@ -64,6 +64,7 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
   StreamSubscription<AlarmSet>? _ringSub;
   StreamSubscription<NotificationResponse>? _notifSub;
   StreamSubscription<AlarmUpdateEvent>? _kitSub;
+  StreamSubscription<Uri?>? _widgetSub;
   final Set<int> _presented = {};
 
   @override
@@ -79,14 +80,16 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     _ringSub?.cancel();
     _notifSub?.cancel();
     _kitSub?.cancel();
+    _widgetSub?.cancel();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    // Arka planda uzun kalınca gün değişmiş veya süresi dolan hatırlatıcılar olabilir.
-    ref.read(waterProvider.notifier).refresh();
+    // Arka planda uzun kalınca gün değişmiş, widget'tan kayıt eklenmiş veya
+    // süresi dolan hatırlatıcılar olabilir.
+    ref.read(waterProvider.notifier).rescheduleReminders();
     ref.invalidate(remindersProvider);
   }
 
@@ -97,6 +100,9 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     _notifSub = notifications.responses.listen(_onNotification);
 
     await notifications.requestPermissions();
+    final widgets = ref.read(widgetServiceProvider);
+    await widgets.init();
+    _widgetSub = widgets.clicks.listen(_onWidgetClick);
     if (Platform.isIOS) {
       await ref.read(alarmServiceProvider).configureSystemAlarm(settings.useSystemAlarm);
       if (await ref.read(alarmKitServiceProvider).isSupported()) {
@@ -112,6 +118,16 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
       notifications.launchResponse = null;
       await _onNotification(launch);
     }
+    try {
+      _onWidgetClick(await widgets.initialLaunchUri());
+    } catch (_) {}
+  }
+
+  void _onWidgetClick(Uri? uri) {
+    if (uri?.host != 'add') return;
+    ref.read(tabIndexProvider.notifier).set(0);
+    final ctx = navigatorKey.currentContext;
+    if (ctx != null && mounted) showAddWaterSheet(ctx);
   }
 
   void _onRinging(AlarmSet set) {
