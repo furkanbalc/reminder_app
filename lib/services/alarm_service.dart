@@ -87,6 +87,7 @@ class AlarmService {
         volumeSettings: VolumeSettings.fade(
           volume: 0.8,
           fadeDuration: const Duration(seconds: 3),
+          showSystemUI: false, // ses seviyesi ayarlanırken sistem ses paneli görünmesin
         ),
         notificationSettings: NotificationSettings(
           title: title,
