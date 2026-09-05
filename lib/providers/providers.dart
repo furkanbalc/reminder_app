@@ -318,45 +318,28 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   /// Ayar değişikliğinde: yeniden yükle ve hatırlatmaları kur.
   Future<void> rescheduleReminders() => _refreshAndReschedule();
 
-  bool _rescheduling = false;
-  bool _rescheduleDirty = false;
-
   Future<WaterState> _refreshAndReschedule() async {
     final s = ref.read(settingsProvider);
     final st = await _load(s);
     state = AsyncData(st);
     await _pushWidget(st, s);
-    unawaited(_rescheduleInBackground());
+    // Onlarca bildirim/alarm kurmak birkaç saniye sürebilir; arayüzü bekletmez.
+    unawaited(_rescheduleInBackground(st, s));
     return st;
   }
 
-  /// Onlarca bildirim/alarm kurmak birkaç saniye sürebilir; arayüzü bekletmez.
-  /// Üst üste çağrılırsa en son durumla bir kez daha çalışır.
-  Future<void> _rescheduleInBackground() async {
-    if (_rescheduling) {
-      _rescheduleDirty = true;
-      return;
-    }
-    _rescheduling = true;
+  Future<void> _rescheduleInBackground(WaterState st, WaterSettings s) async {
     try {
-      do {
-        _rescheduleDirty = false;
-        final s = ref.read(settingsProvider);
-        final st = state.value;
-        if (st == null) break;
-        await ref
-            .read(waterSchedulerProvider)
-            .reschedule(
-              s: s,
-              todayTotalMl: st.todayTotalMl,
-              lastIntakeAt: st.lastIntakeAt,
-              weekSummary: _weekSummary(st, s),
-            );
-      } while (_rescheduleDirty);
+      await ref
+          .read(waterSchedulerProvider)
+          .reschedule(
+            s: s,
+            todayTotalMl: st.todayTotalMl,
+            lastIntakeAt: st.lastIntakeAt,
+            weekSummary: _weekSummary(st, s),
+          );
     } catch (e) {
       debugPrint('Su hatırlatmaları kurulamadı: $e');
-    } finally {
-      _rescheduling = false;
     }
   }
 

@@ -30,6 +30,7 @@ class WaterScheduler {
   static const daysAhead = 7;
   static const escalationOffset = 400;
   static const snoozeId = 1990;
+  static const testId = 1989;
   static const weeklyId = 1997;
   static const eveningId = 1998;
   static const payload = 'water';
@@ -91,12 +92,33 @@ class WaterScheduler {
     return list.isEmpty ? null : list.first.at;
   }
 
+  _RescheduleRequest? _pending;
+  bool _running = false;
+
+  /// Hatırlatmaları baştan kurar. Üst üste çağrılırsa yalnızca en son istek uygulanır;
+  /// böylece eski ayarlarla başlamış bir kurulum yenisinin üstüne yazamaz.
   Future<void> reschedule({
     required WaterSettings s,
     required int todayTotalMl,
     DateTime? lastIntakeAt,
     String? weekSummary,
   }) async {
+    _pending = _RescheduleRequest(s, todayTotalMl, lastIntakeAt, weekSummary);
+    if (_running) return;
+    _running = true;
+    try {
+      while (_pending != null) {
+        final r = _pending!;
+        _pending = null;
+        await _apply(r);
+      }
+    } finally {
+      _running = false;
+    }
+  }
+
+  Future<void> _apply(_RescheduleRequest r) async {
+    final s = r.settings;
     // Çalan bir alarm varken dokunma: "Su İçtim" veya ertele sonrası zaten yeniden kurulur.
     if (await _alarms.isRinging()) {
       debugPrint('Su hatırlatmaları: alarm çalıyor, yeniden kurulum ertelendi');
@@ -108,16 +130,31 @@ class WaterScheduler {
     final list = slots(
       s,
       now,
-      goalReachedToday: todayTotalMl >= s.goalMl,
-      lastIntakeAt: lastIntakeAt,
+      goalReachedToday: r.todayTotalMl >= s.goalMl,
+      lastIntakeAt: r.lastIntakeAt,
     );
     for (final slot in list) {
-      await _schedule(slot, s, isSameDay(slot.at, now) ? todayTotalMl : null);
+      await _schedule(slot, s, isSameDay(slot.at, now) ? r.todayTotalMl : null);
     }
-    await _scheduleEveningNudge(s, now, todayTotalMl);
-    await _scheduleWeeklySummary(s, now, weekSummary);
+    await _scheduleEveningNudge(s, now, r.todayTotalMl);
+    await _scheduleWeeklySummary(s, now, r.weekSummary);
     debugPrint(
-      'Su hatırlatmaları kuruldu: ${list.length} dilim, ${s.alertType.name}, ${sw.elapsedMilliseconds} ms',
+      'Su hatırlatmaları kuruldu: ${list.length} dilim, ${s.alertType.name}, ${s.sound.name}, ${sw.elapsedMilliseconds} ms',
+    );
+  }
+
+  /// Ayarlardaki sesi ve alarm ekranını denemek için 10 saniye sonraya alarm kurar.
+  Future<void> testAlarm(WaterSettings s) async {
+    await _alarms.stop(testId);
+    await _alarms.schedule(
+      id: testId,
+      at: DateTime.now().add(const Duration(seconds: 10)),
+      title: 'Alarm denemesi',
+      body: 'Ses: ${s.sound.label}',
+      sound: s.sound,
+      payload: payload,
+      snooze: Duration(minutes: s.snoozeMin),
+      snoozeLabel: '${s.snoozeMin} dk ertele',
     );
   }
 
@@ -248,4 +285,17 @@ class WaterScheduler {
       details: _notifications.infoDetails(),
     );
   }
+}
+
+class _RescheduleRequest {
+  const _RescheduleRequest(
+    this.settings,
+    this.todayTotalMl,
+    this.lastIntakeAt,
+    this.weekSummary,
+  );
+  final WaterSettings settings;
+  final int todayTotalMl;
+  final DateTime? lastIntakeAt;
+  final String? weekSummary;
 }

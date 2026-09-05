@@ -190,6 +190,21 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                   SettingsRow(
+                    label: 'Alarmı dene',
+                    trailing: const ValueTrailing('10 sn sonra çalar'),
+                    onTap: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await ref.read(waterSchedulerProvider).testAlarm(s);
+                      messenger.showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Alarm 10 saniye sonra çalacak; ekranı kilitleyip deneyebilirsin',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  SettingsRow(
                     label: 'Hedefe ulaşınca sustur',
                     trailing: AppToggle(
                       value: s.stopWhenGoalReached,
