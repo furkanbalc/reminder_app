@@ -15,6 +15,19 @@ class WaterRepository {
     return WaterEntry(id: id, amountMl: amountMl, timestamp: at);
   }
 
+  Future<void> update(int id, {required int amountMl, required DateTime at}) =>
+      _db.update(
+        'water_entries',
+        {'amount_ml': amountMl, 'timestamp': at.millisecondsSinceEpoch},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+  Future<WaterEntry?> byId(int id) async {
+    final rows = await _db.query('water_entries', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : WaterEntry.fromMap(rows.first);
+  }
+
   Future<void> delete(int id) =>
       _db.delete('water_entries', where: 'id = ?', whereArgs: [id]);
 
@@ -27,6 +40,21 @@ class WaterRepository {
       orderBy: 'timestamp ASC',
     );
     return rows.map(WaterEntry.fromMap).toList();
+  }
+
+  Future<List<WaterEntry>> all() async {
+    final rows = await _db.query('water_entries', orderBy: 'timestamp ASC');
+    return rows.map(WaterEntry.fromMap).toList();
+  }
+
+  Future<bool> exists(int amountMl, DateTime at) async {
+    final rows = await _db.query(
+      'water_entries',
+      where: 'amount_ml = ? AND timestamp = ?',
+      whereArgs: [amountMl, at.millisecondsSinceEpoch],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 
   Future<int> totalBetween(DateTime start, DateTime end) async {

@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:alarm/utils/alarm_set.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_alarmkit/flutter_alarmkit.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/home/widgets/add_water_sheet.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'features/reminders/reminder_alarm_screen.dart';
 import 'features/shell/app_shell.dart';
 import 'features/water_alarm/water_alarm_screen.dart';
@@ -25,6 +28,7 @@ class SuApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(settingsProvider.select((s) => s.themeMode.mode));
+    final onboardingDone = ref.watch(settingsProvider.select((s) => s.onboardingDone));
     return MaterialApp(
       title: 'Su Hatırlatıcı',
       debugShowCheckedModeBanner: false,
@@ -40,7 +44,7 @@ class SuApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const AppBootstrap(child: AppShell()),
+      home: onboardingDone ? const AppBootstrap(child: AppShell()) : const OnboardingScreen(),
     );
   }
 }
@@ -59,6 +63,7 @@ class AppBootstrap extends ConsumerStatefulWidget {
 class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBindingObserver {
   StreamSubscription<AlarmSet>? _ringSub;
   StreamSubscription<NotificationResponse>? _notifSub;
+  StreamSubscription<AlarmUpdateEvent>? _kitSub;
   final Set<int> _presented = {};
 
   @override
@@ -73,6 +78,7 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     WidgetsBinding.instance.removeObserver(this);
     _ringSub?.cancel();
     _notifSub?.cancel();
+    _kitSub?.cancel();
     super.dispose();
   }
 
@@ -86,16 +92,20 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
 
   Future<void> _start() async {
     final notifications = ref.read(notificationServiceProvider);
+    final settings = ref.read(settingsProvider);
     _ringSub = ref.read(alarmServiceProvider).ringing.listen(_onRinging);
     _notifSub = notifications.responses.listen(_onNotification);
 
     await notifications.requestPermissions();
+    if (Platform.isIOS) {
+      await ref.read(alarmServiceProvider).configureSystemAlarm(settings.useSystemAlarm);
+      if (await ref.read(alarmKitServiceProvider).isSupported()) {
+        _kitSub = ref.read(alarmKitServiceProvider).updates.listen(_onKitUpdate);
+      }
+    }
 
     await ref.read(remindersProvider.notifier).syncAll();
-    final water = await ref.read(waterProvider.future);
-    await ref
-        .read(waterSchedulerProvider)
-        .reschedule(s: ref.read(settingsProvider), todayTotalMl: water.todayTotalMl);
+    await ref.read(waterProvider.notifier).rescheduleReminders();
 
     final launch = notifications.launchResponse;
     if (launch != null) {
@@ -128,6 +138,23 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     }
   }
 
+  /// AlarmKit sistem alarmı kullanıcı tarafından durdurulunca: su alarmıysa ekleme sayfasını aç.
+  void _onKitUpdate(AlarmUpdateEvent event) {
+    if (event.kind != AlarmUpdateKind.removed) return;
+    final localId = ref.read(alarmServiceProvider).localIdForKit(event.alarmId);
+    if (localId == null) return;
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null || !mounted) return;
+    if (WaterScheduler.isWaterId(localId)) {
+      showAddWaterSheet(ctx);
+    } else if (ReminderScheduler.isReminderAlarmId(localId)) {
+      navigatorKey.currentState?.push(MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => ReminderAlarmScreen(reminderId: ReminderScheduler.reminderIdFromAlarmId(localId)),
+      ));
+    }
+  }
+
   Future<void> _onNotification(NotificationResponse response) async {
     final payload = response.payload ?? '';
     if (payload == WaterScheduler.payload) {
@@ -140,8 +167,15 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
         final ctx = navigatorKey.currentContext;
         if (ctx != null && mounted) showAddWaterSheet(ctx);
       }
-    } else if (ReminderScheduler.reminderIdFromPayload(payload) != null) {
+      return;
+    }
+    final reminderId = ReminderScheduler.reminderIdFromPayload(payload);
+    if (reminderId != null) {
       ref.read(tabIndexProvider.notifier).set(1);
+      navigatorKey.currentState?.push(MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => ReminderAlarmScreen(reminderId: reminderId),
+      ));
     }
   }
 

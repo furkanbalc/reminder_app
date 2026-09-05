@@ -11,6 +11,10 @@
 		<string>audio</string>
 		<string>fetch</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Su kayıtlarını Apple Sağlık ile paylaşmak için.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>İçtiğin suyu Apple Sağlık uygulamasına yazmak için.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -75,5 +79,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>This app uses alarms to notify you even when your device is locked.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_alarmkit._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app needs access to the local network to discover and connect to alarm devices.</string>
 </dict>
 </plist>

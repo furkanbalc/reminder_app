@@ -10,6 +10,7 @@ class Reminder {
     required this.sound,
     required this.enabled,
     required this.createdAt,
+    this.preAlertMin = 0,
   });
 
   final int id;
@@ -20,8 +21,11 @@ class Reminder {
   final AlarmSound sound;
   final bool enabled;
   final DateTime createdAt;
+  /// Zamanından kaç dakika önce ön bildirim gelsin (0: yok)
+  final int preAlertMin;
 
   static const newId = 0;
+  static const preAlertOptions = [0, 5, 10, 30, 60];
 
   Reminder copyWith({
     int? id,
@@ -32,6 +36,7 @@ class Reminder {
     AlarmSound? sound,
     bool? enabled,
     DateTime? createdAt,
+    int? preAlertMin,
   }) {
     return Reminder(
       id: id ?? this.id,
@@ -42,6 +47,7 @@ class Reminder {
       sound: sound ?? this.sound,
       enabled: enabled ?? this.enabled,
       createdAt: createdAt ?? this.createdAt,
+      preAlertMin: preAlertMin ?? this.preAlertMin,
     );
   }
 
@@ -54,6 +60,7 @@ class Reminder {
         'sound': sound.name,
         'enabled': enabled ? 1 : 0,
         'created_at': createdAt.millisecondsSinceEpoch,
+        'pre_alert_min': preAlertMin,
       };
 
   factory Reminder.fromMap(Map<String, Object?> m) => Reminder(
@@ -65,6 +72,32 @@ class Reminder {
         sound: AlarmSound.fromName(m['sound'] as String?),
         enabled: (m['enabled'] as int? ?? 1) == 1,
         createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
+        preAlertMin: (m['pre_alert_min'] as int?) ?? 0,
+      );
+
+  /// Dışa aktarma için.
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'title': title,
+        'dateTime': dateTime.toIso8601String(),
+        'repeat': repeat.name,
+        'alertType': alertType.name,
+        'sound': sound.name,
+        'enabled': enabled,
+        'createdAt': createdAt.toIso8601String(),
+        'preAlertMin': preAlertMin,
+      };
+
+  factory Reminder.fromJson(Map<String, Object?> j) => Reminder(
+        id: newId,
+        title: j['title'] as String? ?? '',
+        dateTime: DateTime.tryParse(j['dateTime'] as String? ?? '') ?? DateTime.now(),
+        repeat: RepeatRule.fromName(j['repeat'] as String?),
+        alertType: AlertType.fromName(j['alertType'] as String?),
+        sound: AlarmSound.fromName(j['sound'] as String?),
+        enabled: j['enabled'] as bool? ?? true,
+        createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
+        preAlertMin: (j['preAlertMin'] as num?)?.toInt() ?? 0,
       );
 
   /// [from] anından sonraki ilk çalma zamanı. Yoksa null (geçmiş tek seferlik).
@@ -105,5 +138,18 @@ class Reminder {
         }
         return null;
     }
+  }
+
+  /// Sıradaki [count] çalma zamanı.
+  List<DateTime> nextOccurrences(DateTime from, int count) {
+    final result = <DateTime>[];
+    var cursor = from;
+    for (var i = 0; i < count; i++) {
+      final next = nextOccurrence(cursor);
+      if (next == null) break;
+      result.add(next);
+      cursor = next;
+    }
+    return result;
   }
 }

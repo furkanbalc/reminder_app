@@ -38,7 +38,7 @@ void main() {
     });
 
     test('her hafta: aynı gün ve saat, bir sonraki hafta', () {
-      final r = make(dateTime: DateTime(2026, 9, 5, 12, 0), repeat: RepeatRule.weekly); // cumartesi 12:00 geçti
+      final r = make(dateTime: DateTime(2026, 9, 5, 12, 0), repeat: RepeatRule.weekly);
       expect(r.nextOccurrence(now), DateTime(2026, 9, 12, 12, 0));
     });
 
@@ -46,5 +46,21 @@ void main() {
       final r = make(dateTime: DateTime(2026, 8, 31, 10, 0), repeat: RepeatRule.monthly);
       expect(r.nextOccurrence(now), DateTime(2026, 9, 30, 10, 0));
     });
+
+    test('sıradaki iki çalma: tekrarlıda ardışık, tek seferlikte tek', () {
+      final daily = make(dateTime: DateTime(2026, 9, 1, 21, 0), repeat: RepeatRule.daily);
+      expect(daily.nextOccurrences(now, 2), [DateTime(2026, 9, 5, 21, 0), DateTime(2026, 9, 6, 21, 0)]);
+      final once = make(dateTime: DateTime(2026, 9, 5, 16, 0));
+      expect(once.nextOccurrences(now, 2), [DateTime(2026, 9, 5, 16, 0)]);
+    });
+  });
+
+  test('json gidiş dönüş', () {
+    final r = make(dateTime: DateTime(2026, 9, 5, 16, 0), repeat: RepeatRule.weekly).copyWith(preAlertMin: 10);
+    final back = Reminder.fromJson(r.toJson());
+    expect(back.title, r.title);
+    expect(back.dateTime, r.dateTime);
+    expect(back.repeat, RepeatRule.weekly);
+    expect(back.preAlertMin, 10);
   });
 }

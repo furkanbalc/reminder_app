@@ -10,6 +10,8 @@ class WaterEntry {
         amountMl: m['amount_ml'] as int,
         timestamp: DateTime.fromMillisecondsSinceEpoch(m['timestamp'] as int),
       );
+
+  Map<String, Object?> toJson() => {'amountMl': amountMl, 'timestamp': timestamp.toIso8601String()};
 }
 
 class DayTotal {

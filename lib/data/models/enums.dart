@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
 enum AlertType {
-  notification('Bildirim'),
-  alarm('Alarm');
+  notification('Bildirim', 'Sessizce bildirir, kaydırınca kapanır'),
+  alarm('Alarm', 'Durdurana kadar çalar'),
+  escalating('Yükselen', 'Önce bildirim, yanıt yoksa alarm');
 
-  const AlertType(this.label);
+  const AlertType(this.label, this.description);
   final String label;
+  final String description;
+
+  /// Bu tipte bir alarm kurulur mu?
+  bool get usesAlarm => this != AlertType.notification;
+
+  /// Bu tipte bir bildirim gönderilir mi?
+  bool get usesNotification => this != AlertType.alarm;
 
   static AlertType fromName(String? name) =>
       AlertType.values.firstWhere((e) => e.name == name, orElse: () => AlertType.notification);

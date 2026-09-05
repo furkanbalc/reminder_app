@@ -25,7 +25,8 @@ class AlarmScaffold extends StatefulWidget {
     this.extra,
   });
 
-  final int alarmId;
+  /// Çalan alarm kimliği; null ise sadece aksiyon ekranıdır.
+  final int? alarmId;
   final Color background;
   final String label;
   final IconData icon;
@@ -53,12 +54,15 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
   void initState() {
     super.initState();
     // Alarm başka bir yerden (bildirim, süre dolması) durursa ekranı kapat.
-    _sub = Alarm.ringing.listen((set) {
-      if (!_handled && mounted && !set.containsId(widget.alarmId)) {
-        _handled = true;
-        Navigator.of(context).maybePop();
-      }
-    });
+    final id = widget.alarmId;
+    if (id != null) {
+      _sub = Alarm.ringing.listen((set) {
+        if (!_handled && mounted && !set.containsId(id)) {
+          _handled = true;
+          Navigator.of(context).maybePop();
+        }
+      });
+    }
   }
 
   @override
@@ -84,7 +88,7 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
     const white = Colors.white;
     final white75 = Colors.white.withValues(alpha: 0.75);
     return PopScope(
-      canPop: false,
+      canPop: widget.alarmId == null,
       child: Scaffold(
         backgroundColor: widget.background,
         body: SafeArea(

@@ -63,11 +63,23 @@ class RemindersScreen extends ConsumerWidget {
                 for (final g in groups) ...[
                   SectionLabel(g.title, padding: EdgeInsets.only(left: 4, top: g == groups.first ? 0 : 8)),
                   for (final item in g.items)
-                    _ReminderTile(
-                      reminder: item.reminder,
-                      next: item.next,
-                      onTap: () => _openForm(context, item.reminder),
-                      onToggle: (v) => ref.read(remindersProvider.notifier).toggle(item.reminder, v),
+                    Dismissible(
+                      key: ValueKey('reminder-${item.reminder.id}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(color: c.danger, borderRadius: BorderRadius.circular(18)),
+                        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                      ),
+                      confirmDismiss: (_) => _confirmDelete(context, item.reminder),
+                      onDismissed: (_) => ref.read(remindersProvider.notifier).remove(item.reminder.id),
+                      child: _ReminderTile(
+                        reminder: item.reminder,
+                        next: item.next,
+                        onTap: () => _openForm(context, item.reminder),
+                        onToggle: (v) => ref.read(remindersProvider.notifier).toggle(item.reminder, v),
+                      ),
                     ),
                 ],
             ],
@@ -75,6 +87,24 @@ class RemindersScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<bool> _confirmDelete(BuildContext context, Reminder r) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hatırlatıcı silinsin mi?'),
+        content: Text(r.title),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Sil', style: TextStyle(color: ctx.colors.danger)),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
   }
 
   void _openForm(BuildContext context, [Reminder? initial]) {
@@ -185,7 +215,11 @@ class _ReminderTile extends StatelessWidget {
                   spacing: 6,
                   children: [
                     Icon(
-                      reminder.alertType == AlertType.alarm ? Icons.alarm_rounded : Icons.notifications_none_rounded,
+                      switch (reminder.alertType) {
+                        AlertType.alarm => Icons.alarm_rounded,
+                        AlertType.escalating => Icons.notifications_active_outlined,
+                        AlertType.notification => Icons.notifications_none_rounded,
+                      },
                       size: 14,
                       color: c.mute,
                     ),

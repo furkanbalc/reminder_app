@@ -5,18 +5,23 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../data/models/water_entry.dart';
 import '../../../providers/providers.dart';
+import 'goal_celebration.dart';
 
-Future<void> showAddWaterSheet(BuildContext context) {
+Future<void> showAddWaterSheet(BuildContext context, {WaterEntry? edit}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => const AddWaterSheet(),
+    builder: (_) => AddWaterSheet(edit: edit),
   );
 }
 
 class AddWaterSheet extends ConsumerStatefulWidget {
-  const AddWaterSheet({super.key});
+  const AddWaterSheet({super.key, this.edit});
+
+  /// Doluysa mevcut kayıt düzenlenir.
+  final WaterEntry? edit;
 
   @override
   ConsumerState<AddWaterSheet> createState() => _AddWaterSheetState();
@@ -25,12 +30,15 @@ class AddWaterSheet extends ConsumerStatefulWidget {
 class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
   static const _presets = [200, 250, 330, 500];
   late int _amount;
-  DateTime _time = DateTime.now();
+  late DateTime _time;
+
+  bool get _isEdit => widget.edit != null;
 
   @override
   void initState() {
     super.initState();
-    _amount = ref.read(settingsProvider).defaultGlassMl;
+    _amount = widget.edit?.amountMl ?? ref.read(settingsProvider).defaultGlassMl;
+    _time = widget.edit?.timestamp ?? DateTime.now();
   }
 
   void _step(int delta) => setState(() => _amount = (_amount + delta).clamp(50, 3000));
@@ -43,7 +51,7 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     );
     if (picked == null) return;
     final now = DateTime.now();
-    var t = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+    var t = DateTime(_time.year, _time.month, _time.day, picked.hour, picked.minute);
     if (t.isAfter(now)) t = now;
     setState(() => _time = t);
   }
@@ -51,15 +59,28 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
   Future<void> _submit() async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
     final notifier = ref.read(waterProvider.notifier);
-    final entry = await notifier.addEntry(_amount, at: _time);
+    if (_isEdit) {
+      await notifier.updateEntry(widget.edit!.id, amountMl: _amount, at: _time);
+      navigator.pop();
+      messenger.showSnackBar(const SnackBar(content: Text('Kayıt güncellendi')));
+      return;
+    }
+    final result = await notifier.addEntry(_amount, at: _time);
     navigator.pop();
+    if (result.reachedGoalNow) {
+      final settings = ref.read(settingsProvider);
+      // ignore: use_build_context_synchronously
+      await showGoalCelebration(rootContext, goalMl: settings.goalMl, streakDays: result.streakDays);
+      return;
+    }
     messenger.showSnackBar(
       SnackBar(
         content: Text('$_amount ml eklendi'),
         persist: false,
         duration: const Duration(seconds: 3),
-        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(entry.id)),
+        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(result.entry.id)),
       ),
     );
   }
@@ -67,14 +88,14 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final isNow = DateTime.now().difference(_time).inMinutes < 1;
+    final isNow = !_isEdit && DateTime.now().difference(_time).inMinutes < 1;
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 10, 24, 24 + MediaQuery.paddingOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 20,
         children: [
-          const SheetHeader(title: 'Su Ekle'),
+          SheetHeader(title: _isEdit ? 'Kaydı Düzenle' : 'Su Ekle'),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
@@ -128,12 +149,12 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
                   Icon(Icons.schedule_rounded, size: 20, color: c.mute),
                   const SizedBox(width: 10),
                   Expanded(child: Text('Zaman', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
-                  ValueTrailing(isNow ? 'Şimdi · ${fmtTime(_time)}' : fmtTime(_time)),
+                  ValueTrailing(isNow ? 'Şimdi · ${fmtTime(_time)}' : (_isEdit ? '${fmtDateShort(_time)} · ${fmtTime(_time)}' : fmtTime(_time))),
                 ],
               ),
             ),
           ),
-          PrimaryButton(label: '$_amount ml Ekle', onTap: _submit),
+          PrimaryButton(label: _isEdit ? 'Kaydet' : '$_amount ml Ekle', onTap: _submit),
         ],
       ),
     );

@@ -25,6 +25,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
   late RepeatRule _repeat;
   late AlertType _alertType;
   late AlarmSound _sound;
+  late int _preAlertMin;
   bool _saving = false;
 
   bool get _isNew => widget.initial == null;
@@ -39,6 +40,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     _repeat = r?.repeat ?? RepeatRule.none;
     _alertType = r?.alertType ?? ref.read(settingsProvider).alertType;
     _sound = r?.sound ?? ref.read(settingsProvider).sound;
+    _preAlertMin = r?.preAlertMin ?? 0;
     _title.addListener(() => setState(() {}));
   }
 
@@ -67,14 +69,25 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     setState(() => _dateTime = DateTime(_dateTime.year, _dateTime.month, _dateTime.day, t.hour, t.minute));
   }
 
-  Future<void> _pickSound() async {
-    final v = await showOptionSheet<AlarmSound>(
+  static String _preAlertLabel(int m) => switch (m) {
+        0 => 'Yok',
+        60 => '1 sa önce',
+        _ => '$m dk önce',
+      };
+
+  Future<void> _pickPreAlert() async {
+    final v = await showOptionSheet<int>(
       context,
-      title: 'Alarm sesi',
-      selected: _sound,
+      title: 'Önceden haber ver',
+      selected: _preAlertMin,
       accent: context.colors.amber,
-      options: [for (final s in AlarmSound.values) PickerOption(s, s.label)],
+      options: [for (final m in Reminder.preAlertOptions) PickerOption(m, _preAlertLabel(m))],
     );
+    if (v != null) setState(() => _preAlertMin = v);
+  }
+
+  Future<void> _pickSound() async {
+    final v = await showSoundPicker(context, selected: _sound, accent: context.colors.amber);
     if (v != null) setState(() => _sound = v);
   }
 
@@ -100,6 +113,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
           sound: _sound,
           enabled: true,
           createdAt: DateTime.now(),
+          preAlertMin: _preAlertMin,
         );
     final r = base.copyWith(
       title: title,
@@ -108,6 +122,7 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
       alertType: _alertType,
       sound: _sound,
       enabled: true,
+      preAlertMin: _preAlertMin,
     );
     if (_isNew) {
       await notifier.add(r);
@@ -219,31 +234,52 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                     ),
                     _Field(
                       label: 'Uyarı tipi',
-                      child: Row(
-                        spacing: 10,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 8,
                         children: [
-                          Expanded(
-                            child: _TypeCard(
-                              icon: Icons.notifications_none_rounded,
-                              title: 'Bildirim',
-                              description: 'Sessizce bildirir, kaydırınca kapanır',
-                              selected: _alertType == AlertType.notification,
-                              onTap: () => setState(() => _alertType = AlertType.notification),
-                            ),
+                          Row(
+                            spacing: 8,
+                            children: [
+                              for (final t in AlertType.values)
+                                Expanded(
+                                  child: _TypeCard(
+                                    icon: switch (t) {
+                                      AlertType.notification => Icons.notifications_none_rounded,
+                                      AlertType.alarm => Icons.alarm_rounded,
+                                      AlertType.escalating => Icons.notifications_active_outlined,
+                                    },
+                                    title: t.label,
+                                    selected: _alertType == t,
+                                    onTap: () => setState(() => _alertType = t),
+                                  ),
+                                ),
+                            ],
                           ),
-                          Expanded(
-                            child: _TypeCard(
-                              icon: Icons.alarm_rounded,
-                              title: 'Alarm',
-                              description: 'Tamam diyene kadar çalar',
-                              selected: _alertType == AlertType.alarm,
-                              onTap: () => setState(() => _alertType = AlertType.alarm),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Text(_alertType.description, style: AppText.body(context, size: 12, color: c.mute)),
                           ),
                         ],
                       ),
                     ),
-                    if (_alertType == AlertType.alarm)
+                    AppCard(
+                      radius: 14,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      onTap: _pickPreAlert,
+                      child: SizedBox(
+                        height: 50,
+                        child: Row(
+                          spacing: 10,
+                          children: [
+                            Icon(Icons.notifications_paused_outlined, size: 20, color: c.mute),
+                            Expanded(child: Text('Önceden haber ver', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
+                            ValueTrailing(_preAlertLabel(_preAlertMin)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_alertType.usesAlarm)
                       AppCard(
                         radius: 14,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -333,14 +369,12 @@ class _TypeCard extends StatelessWidget {
   const _TypeCard({
     required this.icon,
     required this.title,
-    required this.description,
     required this.selected,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
-  final String description;
   final bool selected;
   final VoidCallback onTap;
 
@@ -362,8 +396,12 @@ class _TypeCard extends StatelessWidget {
             spacing: 8,
             children: [
               Icon(icon, size: 24, color: selected ? c.amberDeep : c.mute),
-              Text(title, style: AppText.body(context, size: 15, weight: FontWeight.w600, color: selected ? c.amberDeep : c.ink)),
-              Text(description, style: AppText.body(context, size: 12, color: c.mute)),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.body(context, size: 14, weight: FontWeight.w600, color: selected ? c.amberDeep : c.ink),
+              ),
             ],
           ),
           if (selected)

@@ -10,6 +10,7 @@ import '../../core/widgets/widgets.dart';
 import '../../data/models/water_settings.dart';
 import '../../providers/providers.dart';
 import 'widgets/add_water_sheet.dart';
+import 'widgets/goal_celebration.dart';
 import 'widgets/progress_ring.dart';
 import 'widgets/stats_card.dart';
 
@@ -82,7 +83,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Center(child: _NextReminderChip(settings: settings, todayTotalMl: total)),
+              Center(child: _NextReminderChip(settings: settings, todayTotalMl: total, lastIntakeAt: water?.lastIntakeAt)),
               const SizedBox(height: 16),
               _QuickAddRow(settings: settings),
               const SizedBox(height: 16),
@@ -140,10 +141,11 @@ class HomeScreen extends ConsumerWidget {
 
 /// Sıradaki hatırlatmayı ve kalan süreyi gösterir; yarım dakikada bir yeniden hesaplar.
 class _NextReminderChip extends ConsumerStatefulWidget {
-  const _NextReminderChip({required this.settings, required this.todayTotalMl});
+  const _NextReminderChip({required this.settings, required this.todayTotalMl, this.lastIntakeAt});
 
   final WaterSettings settings;
   final int todayTotalMl;
+  final DateTime? lastIntakeAt;
 
   @override
   ConsumerState<_NextReminderChip> createState() => _NextReminderChipState();
@@ -175,7 +177,7 @@ class _NextReminderChipState extends ConsumerState<_NextReminderChip> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final goalReached = widget.todayTotalMl >= widget.settings.goalMl;
-    final next = ref.read(waterSchedulerProvider).next(widget.settings, _now, goalReachedToday: goalReached);
+    final next = ref.read(waterSchedulerProvider).next(widget.settings, _now, goalReachedToday: goalReached, lastIntakeAt: widget.lastIntakeAt);
     final String text;
     final IconData icon;
     if (next == null) {
@@ -211,14 +213,19 @@ class _QuickAddRow extends ConsumerWidget {
   Future<void> _add(BuildContext context, WidgetRef ref, int ml) async {
     final messenger = ScaffoldMessenger.of(context);
     final notifier = ref.read(waterProvider.notifier);
-    final entry = await notifier.addEntry(ml);
+    final result = await notifier.addEntry(ml);
+    if (result.reachedGoalNow) {
+      if (!context.mounted) return;
+      await showGoalCelebration(context, goalMl: settings.goalMl, streakDays: result.streakDays);
+      return;
+    }
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
         content: Text('$ml ml eklendi'),
         persist: false, // aksiyonlu SnackBar varsayılan olarak kalıcı; 3 sn sonra kapansın
         duration: const Duration(seconds: 3),
-        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(entry.id)),
+        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(result.entry.id)),
       ),
     );
   }

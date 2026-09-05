@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
@@ -70,8 +72,21 @@ class SettingsScreen extends ConsumerWidget {
                   SettingsRow(
                     label: 'Aktif saatler',
                     trailing: ValueTrailing('${fmtMinutesOfDay(s.activeStartMin)} – ${fmtMinutesOfDay(s.activeEndMin)}'),
-                    onTap: () => _pickActiveHours(context, s, save),
+                    onTap: () => _pickHours(context, s, save, weekend: false),
                   ),
+                  SettingsRow(
+                    label: 'Hafta sonu farklı',
+                    trailing: AppToggle(
+                      value: s.weekendEnabled,
+                      onChanged: (v) => save(s.copyWith(weekendEnabled: v)),
+                    ),
+                  ),
+                  if (s.weekendEnabled)
+                    SettingsRow(
+                      label: 'Hafta sonu saatleri',
+                      trailing: ValueTrailing('${fmtMinutesOfDay(s.weekendStartMin)} – ${fmtMinutesOfDay(s.weekendEndMin)}'),
+                      onTap: () => _pickHours(context, s, save, weekend: true),
+                    ),
                   SettingsRow(
                     label: 'Hatırlatma aralığı',
                     trailing: ValueTrailing(fmtInterval(s.intervalMin)),
@@ -98,26 +113,100 @@ class SettingsScreen extends ConsumerWidget {
                       onChanged: (i) => save(s.copyWith(alertType: AlertType.values[i])),
                     ),
                   ),
+                  if (s.alertType == AlertType.escalating)
+                    SettingsRow(
+                      label: 'Alarma geçiş süresi',
+                      trailing: ValueTrailing('${s.escalationMin} dk'),
+                      onTap: () async {
+                        final v = await showOptionSheet<int>(
+                          context,
+                          title: 'Yanıt yoksa kaç dakika sonra alarm çalsın?',
+                          selected: s.escalationMin,
+                          options: [for (final m in WaterSettings.escalationOptions) PickerOption(m, '$m dk')],
+                        );
+                        if (v != null) save(s.copyWith(escalationMin: v));
+                      },
+                    ),
+                  SettingsRow(
+                    label: 'Erteleme süresi',
+                    trailing: ValueTrailing('${s.snoozeMin} dk'),
+                    onTap: () async {
+                      final v = await showOptionSheet<int>(
+                        context,
+                        title: 'Erteleme süresi',
+                        selected: s.snoozeMin,
+                        options: [for (final m in WaterSettings.snoozeOptions) PickerOption(m, '$m dk')],
+                      );
+                      if (v != null) save(s.copyWith(snoozeMin: v));
+                    },
+                  ),
                   SettingsRow(
                     label: 'Alarm sesi',
                     trailing: ValueTrailing(s.sound.label),
                     onTap: () async {
-                      final v = await showOptionSheet<AlarmSound>(
-                        context,
-                        title: 'Alarm sesi',
-                        selected: s.sound,
-                        options: [for (final snd in AlarmSound.values) PickerOption(snd, snd.label)],
-                      );
+                      final v = await showSoundPicker(context, selected: s.sound);
                       if (v != null) save(s.copyWith(sound: v));
                     },
                   ),
                   SettingsRow(
                     label: 'Hedefe ulaşınca sustur',
-                    last: true,
                     trailing: AppToggle(
                       value: s.stopWhenGoalReached,
                       onChanged: (v) => save(s.copyWith(stopWhenGoalReached: v)),
                     ),
+                  ),
+                  SettingsRow(
+                    label: 'Akşam hatırlatması',
+                    trailing: AppToggle(
+                      value: s.eveningNudge,
+                      onChanged: (v) => save(s.copyWith(eveningNudge: v)),
+                    ),
+                  ),
+                  SettingsRow(
+                    label: 'Haftalık özet',
+                    last: true,
+                    trailing: AppToggle(
+                      value: s.weeklySummary,
+                      onChanged: (v) => save(s.copyWith(weeklySummary: v)),
+                    ),
+                  ),
+                ],
+              ),
+              _Section(
+                title: 'Entegrasyonlar',
+                children: [
+                  SettingsRow(
+                    label: '${ref.read(healthServiceProvider).platformLabel}’a yaz',
+                    last: !Platform.isIOS,
+                    trailing: AppToggle(
+                      value: s.healthSync,
+                      onChanged: (v) => _toggleHealth(context, ref, s, v),
+                    ),
+                  ),
+                  if (Platform.isIOS)
+                    SettingsRow(
+                      label: 'Sistem alarmı (iOS 26+)',
+                      last: true,
+                      trailing: AppToggle(
+                        value: s.useSystemAlarm,
+                        onChanged: (v) => _toggleSystemAlarm(context, ref, s, v),
+                      ),
+                    ),
+                ],
+              ),
+              _Section(
+                title: 'Yedek',
+                children: [
+                  SettingsRow(
+                    label: 'Dışa aktar',
+                    trailing: const ValueTrailing('JSON'),
+                    onTap: () => _export(context, ref),
+                  ),
+                  SettingsRow(
+                    label: 'İçe aktar',
+                    last: true,
+                    trailing: const ValueTrailing('Dosya seç'),
+                    onTap: () => _import(context, ref),
                   ),
                 ],
               ),
@@ -152,7 +241,7 @@ class SettingsScreen extends ConsumerWidget {
                   SettingsRow(
                     label: 'Bildirim izinleri',
                     last: true,
-                    trailing: ValueTrailing('Kontrol et'),
+                    trailing: const ValueTrailing('Kontrol et'),
                     onTap: () async {
                       final messenger = ScaffoldMessenger.of(context);
                       final ok = await ref.read(notificationServiceProvider).requestPermissions();
@@ -177,6 +266,81 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _toggleHealth(BuildContext context, WidgetRef ref, WaterSettings s, bool v) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(settingsProvider.notifier);
+    if (!v) {
+      await notifier.save(s.copyWith(healthSync: false));
+      return;
+    }
+    final health = ref.read(healthServiceProvider);
+    if (!await health.isAvailable()) {
+      messenger.showSnackBar(SnackBar(content: Text('${health.platformLabel} bu cihazda kullanılamıyor')));
+      return;
+    }
+    final ok = await health.requestAccess();
+    if (!ok) {
+      messenger.showSnackBar(SnackBar(content: Text('${health.platformLabel} izni verilmedi')));
+      return;
+    }
+    await notifier.save(s.copyWith(healthSync: true));
+    messenger.showSnackBar(SnackBar(content: Text('Su kayıtları ${health.platformLabel}’a yazılacak')));
+  }
+
+  Future<void> _toggleSystemAlarm(BuildContext context, WidgetRef ref, WaterSettings s, bool v) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(settingsProvider.notifier);
+    if (!v) {
+      await ref.read(alarmServiceProvider).configureSystemAlarm(false);
+      await notifier.save(s.copyWith(useSystemAlarm: false));
+      return;
+    }
+    final kit = ref.read(alarmKitServiceProvider);
+    if (!await kit.isSupported()) {
+      messenger.showSnackBar(const SnackBar(content: Text('Sistem alarmı için iOS 26 veya üzeri gerekir')));
+      return;
+    }
+    final ok = await kit.requestAuthorization();
+    if (!ok) {
+      messenger.showSnackBar(const SnackBar(content: Text('Alarm izni verilmedi. Ayarlar > Su Hatırlatıcı’dan açabilirsin.')));
+      return;
+    }
+    await ref.read(alarmServiceProvider).configureSystemAlarm(true);
+    await notifier.save(s.copyWith(useSystemAlarm: true));
+  }
+
+  Future<void> _export(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final file = await ref.read(backupServiceProvider).writeExport(ref.read(settingsProvider));
+      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: 'Su Hatırlatıcı yedeği'));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Dışa aktarılamadı: $e')));
+    }
+  }
+
+  Future<void> _import(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final picked = await FilePicker.pickFiles(type: FileType.any);
+    if (picked.isEmpty) return;
+    final path = picked.first.path;
+    if (path == null) return;
+    try {
+      final result = await ref.read(backupServiceProvider).importFile(File(path), current: ref.read(settingsProvider));
+      if (result.settings != null) {
+        await ref.read(settingsProvider.notifier).save(result.settings!.copyWith(onboardingDone: true));
+      }
+      await ref.read(waterProvider.notifier).rescheduleReminders();
+      ref.invalidate(remindersProvider);
+      await ref.read(remindersProvider.notifier).syncAll();
+      messenger.showSnackBar(SnackBar(
+        content: Text('${result.entriesAdded} su kaydı, ${result.remindersAdded} hatırlatıcı içe aktarıldı'),
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('İçe aktarılamadı: $e')));
+    }
+  }
+
   Future<void> _batteryOptimization(BuildContext context) async {
     final go = await showDialog<bool>(
       context: context,
@@ -197,22 +361,17 @@ class SettingsScreen extends ConsumerWidget {
     if (!status.isGranted) await openAppSettings();
   }
 
-  Future<void> _pickActiveHours(
+  Future<void> _pickHours(
     BuildContext context,
     WaterSettings s,
-    Future<void> Function(WaterSettings) save,
-  ) async {
-    final start = await pickTime(
-      context,
-      TimeOfDay(hour: s.activeStartMin ~/ 60, minute: s.activeStartMin % 60),
-      help: 'Başlangıç saati',
-    );
+    Future<void> Function(WaterSettings) save, {
+    required bool weekend,
+  }) async {
+    final startMin0 = weekend ? s.weekendStartMin : s.activeStartMin;
+    final endMin0 = weekend ? s.weekendEndMin : s.activeEndMin;
+    final start = await pickTime(context, TimeOfDay(hour: startMin0 ~/ 60, minute: startMin0 % 60), help: 'Başlangıç saati');
     if (start == null || !context.mounted) return;
-    final end = await pickTime(
-      context,
-      TimeOfDay(hour: s.activeEndMin ~/ 60, minute: s.activeEndMin % 60),
-      help: 'Bitiş saati',
-    );
+    final end = await pickTime(context, TimeOfDay(hour: endMin0 ~/ 60, minute: endMin0 % 60), help: 'Bitiş saati');
     if (end == null) return;
     final startMin = start.hour * 60 + start.minute;
     final endMin = end.hour * 60 + end.minute;
@@ -224,7 +383,9 @@ class SettingsScreen extends ConsumerWidget {
       }
       return;
     }
-    await save(s.copyWith(activeStartMin: startMin, activeEndMin: endMin));
+    await save(weekend
+        ? s.copyWith(weekendStartMin: startMin, weekendEndMin: endMin)
+        : s.copyWith(activeStartMin: startMin, activeEndMin: endMin));
   }
 }
 

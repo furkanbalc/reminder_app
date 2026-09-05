@@ -6,7 +6,7 @@ class AppDatabase {
     final dir = await getDatabasesPath();
     return openDatabase(
       p.join(dir, 'su_hatirlatici.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE water_entries (
@@ -25,9 +25,15 @@ class AppDatabase {
             alert_type TEXT NOT NULL,
             sound TEXT NOT NULL,
             enabled INTEGER NOT NULL DEFAULT 1,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            pre_alert_min INTEGER NOT NULL DEFAULT 0
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('ALTER TABLE reminders ADD COLUMN pre_alert_min INTEGER NOT NULL DEFAULT 0');
+        }
       },
     );
   }

@@ -125,6 +125,13 @@ class NotificationService {
         darwinCategory: waterCategory,
       );
 
+  /// Aksiyon butonu olmayan bilgi bildirimi (akşam hatırlatması, haftalık özet).
+  NotificationDetails infoDetails() => _details(
+        channelId: waterChannelId,
+        channelName: 'Su hatırlatmaları',
+        channelDescription: 'Düzenli su içme hatırlatmaları',
+      );
+
   NotificationDetails reminderDetails() => _details(
         channelId: reminderChannelId,
         channelName: 'Hatırlatıcılar',
