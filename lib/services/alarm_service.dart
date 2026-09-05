@@ -32,13 +32,18 @@ class AlarmService {
 
   bool get systemAlarmActive => useSystemAlarm && _kitReady;
 
-  Map<String, String> _kitIds() {
+  /// Bizim kimlik -> {kit: AlarmKit kimliği, at: kurulum zamanı (ms)}
+  Map<String, Map<String, Object?>> _kitIds() {
     final raw = _prefs.getString(_mapKey);
     if (raw == null) return {};
-    return (jsonDecode(raw) as Map).cast<String, String>();
+    try {
+      return (jsonDecode(raw) as Map).map((k, v) => MapEntry(k as String, (v as Map).cast<String, Object?>()));
+    } catch (_) {
+      return {};
+    }
   }
 
-  Future<void> _saveKitIds(Map<String, String> m) => _prefs.setString(_mapKey, jsonEncode(m));
+  Future<void> _saveKitIds(Map<String, Map<String, Object?>> m) => _prefs.setString(_mapKey, jsonEncode(m));
 
   Future<void> schedule({
     required int id,
@@ -62,7 +67,7 @@ class AlarmService {
         snoozeMin: snooze?.inMinutes ?? 10,
       );
       if (kitId != null) {
-        final m = _kitIds()..['$id'] = kitId;
+        final m = _kitIds()..['$id'] = {'kit': kitId, 'at': at.millisecondsSinceEpoch};
         await _saveKitIds(m);
         return;
       }
@@ -96,10 +101,11 @@ class AlarmService {
 
   Future<void> _cancelKit(int id) async {
     final m = _kitIds();
-    final kitId = m.remove('$id');
-    if (kitId != null) {
-      await _kit.cancel(kitId);
+    final entry = m.remove('$id');
+    if (entry != null) {
+      // Önce eşlemeyi sil: iptal olayı geldiğinde "kullanıcı durdurdu" sanılmasın.
       await _saveKitIds(m);
+      await _kit.cancel(entry['kit'] as String);
     }
   }
 
@@ -116,11 +122,12 @@ class AlarmService {
     }
     final m = _kitIds();
     final toRemove = m.keys.where((k) => test(int.tryParse(k) ?? -1)).toList();
-    for (final k in toRemove) {
-      await _kit.cancel(m[k]!);
-      m.remove(k);
+    if (toRemove.isEmpty) return;
+    final kitIds = [for (final k in toRemove) m.remove(k)!['kit'] as String];
+    await _saveKitIds(m);
+    for (final kitId in kitIds) {
+      await _kit.cancel(kitId);
     }
-    if (toRemove.isNotEmpty) await _saveKitIds(m);
   }
 
   Future<List<AlarmSettings>> scheduled() => Alarm.getAlarms();
@@ -131,11 +138,23 @@ class AlarmService {
 
   AlarmSet? get ringingNow => Alarm.ringing.valueOrNull;
 
-  /// AlarmKit kimliğinden bizim kimliğe.
-  int? localIdForKit(String kitId) {
+  /// AlarmKit kimliğinden bizim kimliğe ve kurulum zamanına. Eşleme yoksa null.
+  ({int id, DateTime at})? kitInfo(String kitId) {
     for (final e in _kitIds().entries) {
-      if (e.value == kitId) return int.tryParse(e.key);
+      if (e.value['kit'] == kitId) {
+        final id = int.tryParse(e.key);
+        final at = (e.value['at'] as num?)?.toInt();
+        if (id == null || at == null) return null;
+        return (id: id, at: DateTime.fromMillisecondsSinceEpoch(at));
+      }
     }
     return null;
+  }
+
+  /// Kullanıcı sistem arayüzünden durdurunca eşlemeyi temizle.
+  Future<void> forgetKit(String kitId) async {
+    final m = _kitIds();
+    m.removeWhere((_, v) => v['kit'] == kitId);
+    await _saveKitIds(m);
   }
 }

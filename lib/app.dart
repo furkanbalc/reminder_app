@@ -154,15 +154,27 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     }
   }
 
+  bool _kitSheetOpen = false;
+
   /// AlarmKit sistem alarmı kullanıcı tarafından durdurulunca: su alarmıysa ekleme sayfasını aç.
-  void _onKitUpdate(AlarmUpdateEvent event) {
+  /// Bizim iptal ettiğimiz (zamanı gelmemiş) alarmların olayları yok sayılır.
+  Future<void> _onKitUpdate(AlarmUpdateEvent event) async {
     if (event.kind != AlarmUpdateKind.removed) return;
-    final localId = ref.read(alarmServiceProvider).localIdForKit(event.alarmId);
-    if (localId == null) return;
+    final alarms = ref.read(alarmServiceProvider);
+    final info = alarms.kitInfo(event.alarmId);
+    if (info == null) return;
+    if (DateTime.now().isBefore(info.at.subtract(const Duration(seconds: 5)))) return;
+    await alarms.forgetKit(event.alarmId);
     final ctx = navigatorKey.currentContext;
-    if (ctx == null || !mounted) return;
+    if (ctx == null || !ctx.mounted || _kitSheetOpen) return;
+    final localId = info.id;
     if (WaterScheduler.isWaterId(localId)) {
-      showAddWaterSheet(ctx);
+      _kitSheetOpen = true;
+      try {
+        await showAddWaterSheet(ctx);
+      } finally {
+        _kitSheetOpen = false;
+      }
     } else if (ReminderScheduler.isReminderAlarmId(localId)) {
       navigatorKey.currentState?.push(MaterialPageRoute<void>(
         fullscreenDialog: true,
