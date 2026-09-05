@@ -120,8 +120,12 @@ class AlarmService {
   /// Çalmakta olan alarmlar korunur; yalnızca bekleyenler iptal edilir.
   Future<void> stopWhere(bool Function(int id) test) async {
     final ringing = Alarm.ringing.valueOrNull?.alarms.map((a) => a.id).toSet() ?? const <int>{};
+    final now = DateTime.now();
     for (final a in await Alarm.getAlarms()) {
-      if (test(a.id) && !ringing.contains(a.id)) await Alarm.stop(a.id);
+      if (!test(a.id) || ringing.contains(a.id)) continue;
+      // Zamanı gelmiş bir alarm çalıyor olabilir; uygulama yeni açıldıysa akış henüz bildirmemiş olabilir.
+      if (!a.dateTime.isAfter(now) && await Alarm.isRinging(a.id)) continue;
+      await Alarm.stop(a.id);
     }
     final m = _kitIds();
     final toRemove = m.keys.where((k) => test(int.tryParse(k) ?? -1)).toList();

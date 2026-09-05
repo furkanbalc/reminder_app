@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../core/utils/format.dart';
 import '../data/models/enums.dart';
 import '../data/models/water_settings.dart';
@@ -32,8 +34,13 @@ class WaterScheduler {
   static const eveningId = 1998;
   static const payload = 'water';
 
-  /// iOS'ta bekleyen bildirim sınırı 64. Yükselen modda her dilim iki kayıt kullanır.
-  static int maxSlotsFor(AlertType type) => type == AlertType.escalating ? 24 : 48;
+  /// iOS'ta bekleyen bildirim sınırı 64. Alarm kurmak bildirimden çok daha pahalı
+  /// (her biri ayrı sistem alarmı), o yüzden alarm modlarında daha az dilim kurulur.
+  static int maxSlotsFor(AlertType type) => switch (type) {
+        AlertType.notification => 48,
+        AlertType.alarm => 24,
+        AlertType.escalating => 16,
+      };
 
   static bool isWaterId(int id) => id >= baseId && id < 2000;
 
@@ -80,6 +87,12 @@ class WaterScheduler {
     DateTime? lastIntakeAt,
     String? weekSummary,
   }) async {
+    // Çalan bir alarm varken dokunma: "Su İçtim" veya ertele sonrası zaten yeniden kurulur.
+    if (await _alarms.isRinging()) {
+      debugPrint('Su hatırlatmaları: alarm çalıyor, yeniden kurulum ertelendi');
+      return;
+    }
+    final sw = Stopwatch()..start();
     await cancelAll();
     final now = DateTime.now();
     final list = slots(s, now, goalReachedToday: todayTotalMl >= s.goalMl, lastIntakeAt: lastIntakeAt);
@@ -88,6 +101,7 @@ class WaterScheduler {
     }
     await _scheduleEveningNudge(s, now, todayTotalMl);
     await _scheduleWeeklySummary(s, now, weekSummary);
+    debugPrint('Su hatırlatmaları kuruldu: ${list.length} dilim, ${s.alertType.name}, ${sw.elapsedMilliseconds} ms');
   }
 
   Future<void> snooze({required WaterSettings s, required int todayTotalMl}) async {

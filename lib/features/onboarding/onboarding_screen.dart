@@ -25,7 +25,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
   late WaterSettings _s;
-  bool _goalEdited = false;
   bool _busy = false;
 
   static const _pageCount = 5;
@@ -33,7 +32,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    _s = ref.read(settingsProvider).copyWith(goalMl: WaterSettings.suggestedGoal(70), weightKg: 70);
+    _s = ref.read(settingsProvider);
   }
 
   @override
@@ -175,62 +174,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _goal(BuildContext context) {
     final c = context.colors;
-    final suggested = WaterSettings.suggestedGoal(_s.weightKg);
+    const presets = [1500, 2000, 2500, 3000];
     return _frame(
       context,
       title: 'Günlük hedefin',
-      text: 'Kilona göre bir öneri hazırladık. İstersen hedefi elle değiştirebilirsin.',
+      text: 'Çoğu yetişkin için günde 2 ile 3 litre iyi bir başlangıç. İstediğin zaman değiştirebilirsin.',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
           AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 8,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text('Kilo', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
-                    Text('${_s.weightKg} kg', style: AppText.display(context, size: 18)),
-                  ],
-                ),
-                Slider(
-                  value: _s.weightKg.toDouble(),
-                  min: 40,
-                  max: 150,
-                  divisions: 110,
-                  onChanged: (v) => setState(() {
-                    _s = _s.copyWith(weightKg: v.round());
-                    if (!_goalEdited) _s = _s.copyWith(goalMl: WaterSettings.suggestedGoal(v.round()));
-                  }),
-                ),
-              ],
-            ),
-          ),
-          AppCard(
             child: Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 2,
-                    children: [
-                      Text('Günlük hedef', style: AppText.body(context, size: 15, weight: FontWeight.w500)),
-                      Text(
-                        _goalEdited ? 'Öneri: ${fmtLiters(suggested)} L' : 'Kilona göre öneri',
-                        style: AppText.body(context, size: 12, color: c.mute),
-                      ),
-                    ],
-                  ),
-                ),
+                Expanded(child: Text('Günlük hedef', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
                 Row(
                   spacing: 10,
                   children: [
                     CircleIconButton(
                       icon: Icons.remove_rounded,
                       size: 36,
-                      onTap: _s.goalMl > 1000 ? () => setState(() { _goalEdited = true; _s = _s.copyWith(goalMl: _s.goalMl - 100); }) : null,
+                      onTap: _s.goalMl > 1000 ? () => setState(() => _s = _s.copyWith(goalMl: _s.goalMl - 100)) : null,
                     ),
                     SizedBox(width: 60, child: Text('${fmtLiters(_s.goalMl)} L', textAlign: TextAlign.center, style: AppText.display(context, size: 20))),
                     CircleIconButton(
@@ -239,12 +202,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       color: c.waterSoft,
                       iconColor: c.waterDeep,
                       bordered: false,
-                      onTap: _s.goalMl < 6000 ? () => setState(() { _goalEdited = true; _s = _s.copyWith(goalMl: _s.goalMl + 100); }) : null,
+                      onTap: _s.goalMl < 6000 ? () => setState(() => _s = _s.copyWith(goalMl: _s.goalMl + 100)) : null,
                     ),
                   ],
                 ),
               ],
             ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final g in presets)
+                AppChip(
+                  label: '${fmtLiters(g)} L',
+                  selected: _s.goalMl == g,
+                  selectedColor: c.waterDeep,
+                  selectedTextColor: Colors.white,
+                  onTap: () => setState(() => _s = _s.copyWith(goalMl: g)),
+                ),
+            ],
           ),
         ],
       ),
