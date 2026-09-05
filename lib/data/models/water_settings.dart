@@ -26,7 +26,8 @@ class WaterSettings {
 
   static const quickAmounts = [200, 330, 500];
   static const glassOptions = [150, 200, 250, 330, 400, 500, 750];
-  static const intervalOptions = [30, 45, 60, 90, 120, 180];
+  static const intervalOptions = [5, 30, 45, 60, 90, 120, 180];
+  static const testIntervalMin = 5;
 
   WaterSettings copyWith({
     int? goalMl,

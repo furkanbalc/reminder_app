@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -80,7 +82,7 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              Center(child: _NextReminderChip(next: water?.nextReminder, goalReached: total >= settings.goalMl)),
+              Center(child: _NextReminderChip(settings: settings, todayTotalMl: total)),
               const SizedBox(height: 16),
               _QuickAddRow(settings: settings),
               const SizedBox(height: 16),
@@ -136,22 +138,51 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _NextReminderChip extends StatelessWidget {
-  const _NextReminderChip({required this.next, required this.goalReached});
+/// Sıradaki hatırlatmayı ve kalan süreyi gösterir; yarım dakikada bir yeniden hesaplar.
+class _NextReminderChip extends ConsumerStatefulWidget {
+  const _NextReminderChip({required this.settings, required this.todayTotalMl});
 
-  final DateTime? next;
-  final bool goalReached;
+  final WaterSettings settings;
+  final int todayTotalMl;
+
+  @override
+  ConsumerState<_NextReminderChip> createState() => _NextReminderChipState();
+}
+
+class _NextReminderChipState extends ConsumerState<_NextReminderChip> {
+  Timer? _timer;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      final now = DateTime.now();
+      final dayChanged = !isSameDay(now, _now);
+      setState(() => _now = now);
+      // Gün değişince istatistikler ve dilimler baştan yüklensin.
+      if (dayChanged) ref.read(waterProvider.notifier).refresh();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final goalReached = widget.todayTotalMl >= widget.settings.goalMl;
+    final next = ref.read(waterSchedulerProvider).next(widget.settings, _now, goalReachedToday: goalReached);
     final String text;
     final IconData icon;
     if (next == null) {
       text = goalReached ? 'Hedefe ulaştın, bugün hatırlatma yok' : 'Bugün için hatırlatma kalmadı';
       icon = goalReached ? Icons.check_circle_outline_rounded : Icons.bedtime_outlined;
     } else {
-      text = 'Sonraki hatırlatma ${fmtTime(next!)} · ${fmtRelative(next!)}';
+      text = 'Sonraki hatırlatma ${fmtTime(next)} · ${fmtRelative(next, from: _now)}';
       icon = Icons.alarm_rounded;
     }
     return Container(

@@ -56,7 +56,7 @@ class AppBootstrap extends ConsumerStatefulWidget {
   ConsumerState<AppBootstrap> createState() => _AppBootstrapState();
 }
 
-class _AppBootstrapState extends ConsumerState<AppBootstrap> {
+class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBindingObserver {
   StreamSubscription<AlarmSet>? _ringSub;
   StreamSubscription<NotificationResponse>? _notifSub;
   final Set<int> _presented = {};
@@ -64,14 +64,24 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _start());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ringSub?.cancel();
     _notifSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    // Arka planda uzun kalınca gün değişmiş veya süresi dolan hatırlatıcılar olabilir.
+    ref.read(waterProvider.notifier).refresh();
+    ref.invalidate(remindersProvider);
   }
 
   Future<void> _start() async {

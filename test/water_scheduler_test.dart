@@ -27,7 +27,23 @@ void main() {
 
     test('hedefe ulaşıldıysa bugünkü dilimler atlanır', () {
       final slots = scheduler.slots(settings, now, goalReachedToday: true);
-      expect(slots.every((s) => s.at.day == 6), isTrue);
+      expect(slots.any((s) => s.at.day == 5), isFalse);
+      expect(slots.first.at, DateTime(2026, 9, 6, 8, 0));
+    });
+
+    test('birkaç gün ileriye kurulur ama toplam sınırı aşmaz', () {
+      final slots = scheduler.slots(settings, now, goalReachedToday: false);
+      expect(slots.length, lessThanOrEqualTo(WaterScheduler.maxScheduled));
+      expect(slots.map((s) => s.at.day).toSet().length, greaterThanOrEqualTo(3));
+      expect(slots.map((s) => s.id).toSet().length, slots.length);
+    });
+
+    test('5 dk test aralığında dilimler sınıra kadar sık kurulur', () {
+      const fast = WaterSettings(activeStartMin: 8 * 60, activeEndMin: 23 * 60, intervalMin: 5);
+      final slots = scheduler.slots(fast, now, goalReachedToday: false);
+      expect(slots.length, WaterScheduler.maxScheduled);
+      expect(slots.first.at, DateTime(2026, 9, 5, 13, 50));
+      expect(slots[1].at.difference(slots[0].at), const Duration(minutes: 5));
     });
 
     test('aktif saat bitince sıradaki yarın sabah olur', () {

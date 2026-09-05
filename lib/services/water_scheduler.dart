@@ -21,6 +21,10 @@ class WaterScheduler {
 
   static const baseId = 1000;
   static const perDay = 50;
+  /// Kaç gün ileriye kurulur. Uygulama açılmasa da hatırlatmalar sürer.
+  static const daysAhead = 7;
+  /// iOS'ta bekleyen bildirim sınırı 64; pay bırakıyoruz.
+  static const maxScheduled = 60;
   static const snoozeId = 1999;
   static const payload = 'water';
 
@@ -29,18 +33,19 @@ class WaterScheduler {
   List<WaterSlot> slots(WaterSettings s, DateTime now, {required bool goalReachedToday}) {
     final result = <WaterSlot>[];
     final threshold = now.add(const Duration(seconds: 30));
-    for (var dayOffset = 0; dayOffset < 2; dayOffset++) {
+    for (var dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
       if (dayOffset == 0 && s.stopWhenGoalReached && goalReachedToday) continue;
       final day = DateTime(now.year, now.month, now.day + dayOffset);
       final end = day.add(Duration(minutes: s.activeEndMin));
       var t = day.add(Duration(minutes: s.activeStartMin));
-      var i = 0;
-      while (!t.isAfter(end) && i < perDay) {
+      var added = 0; // gün başına kurulan dilim; geçmiş dilimler sayılmaz
+      while (!t.isAfter(end) && added < perDay) {
+        if (result.length >= maxScheduled) return result;
         if (t.isAfter(threshold)) {
-          result.add(WaterSlot(id: baseId + dayOffset * perDay + i, at: t));
+          result.add(WaterSlot(id: baseId + dayOffset * perDay + added, at: t));
+          added++;
         }
         t = t.add(Duration(minutes: s.intervalMin));
-        i++;
       }
     }
     return result;
@@ -56,7 +61,8 @@ class WaterScheduler {
     final now = DateTime.now();
     final list = slots(s, now, goalReachedToday: todayTotalMl >= s.goalMl);
     for (final slot in list) {
-      await _schedule(slot.id, slot.at, s, todayTotalMl);
+      final isToday = slot.at.day == now.day && slot.at.month == now.month && slot.at.year == now.year;
+      await _schedule(slot.id, slot.at, s, isToday ? todayTotalMl : null);
     }
   }
 
@@ -67,16 +73,17 @@ class WaterScheduler {
   }
 
   Future<void> cancelAll() async {
-    await _notifications.cancelMany([
-      for (var i = 0; i < perDay * 2; i++) baseId + i,
-      snoozeId,
-    ]);
+    final pending = await _notifications.pendingIds();
+    await _notifications.cancelMany(pending.where(isWaterId));
     await _alarms.stopWhere(isWaterId);
   }
 
-  Future<void> _schedule(int id, DateTime at, WaterSettings s, int todayTotalMl) async {
+  /// [todayTotalMl] yalnızca bugünkü dilimler için verilir; ileri günlerde genel metin kullanılır.
+  Future<void> _schedule(int id, DateTime at, WaterSettings s, int? todayTotalMl) async {
     const title = 'Su içme vakti';
-    final body = 'Bir bardak su iç. Bugün ${fmtLiters(todayTotalMl)} / ${fmtLiters(s.goalMl)} L';
+    final body = todayTotalMl == null
+        ? 'Bir bardak su iç. Günlük hedef ${fmtLiters(s.goalMl)} L'
+        : 'Bir bardak su iç. Bugün ${fmtLiters(todayTotalMl)} / ${fmtLiters(s.goalMl)} L';
     if (s.alertType == AlertType.alarm) {
       await _alarms.schedule(
         id: id,

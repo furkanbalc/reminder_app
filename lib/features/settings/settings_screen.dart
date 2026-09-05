@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -77,7 +80,10 @@ class SettingsScreen extends ConsumerWidget {
                         context,
                         title: 'Hatırlatma aralığı',
                         selected: s.intervalMin,
-                        options: [for (final m in WaterSettings.intervalOptions) PickerOption(m, fmtInterval(m))],
+                        options: [
+                          for (final m in WaterSettings.intervalOptions)
+                            PickerOption(m, m == WaterSettings.testIntervalMin ? '${fmtInterval(m)} (test)' : fmtInterval(m)),
+                        ],
                       );
                       if (v != null) save(s.copyWith(intervalMin: v));
                     },
@@ -131,6 +137,18 @@ class SettingsScreen extends ConsumerWidget {
                       if (v != null) save(s.copyWith(themeMode: v));
                     },
                   ),
+                  if (Platform.isAndroid) ...[
+                    SettingsRow(
+                      label: 'Pil optimizasyonu',
+                      trailing: const _BatteryStatus(),
+                      onTap: () => _batteryOptimization(context),
+                    ),
+                    SettingsRow(
+                      label: 'Tam ekran alarm izni',
+                      trailing: const ValueTrailing('Ayarları aç'),
+                      onTap: () => ref.read(notificationServiceProvider).requestFullScreenIntentPermission(),
+                    ),
+                  ],
                   SettingsRow(
                     label: 'Bildirim izinleri',
                     last: true,
@@ -157,6 +175,26 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _batteryOptimization(BuildContext context) async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Pil optimizasyonunu kapat'),
+        content: const Text(
+          'Bazı telefonlar pil tasarrufu için arka plandaki alarmları durdurur. '
+          'Bu uygulama için pil optimizasyonunu kapatırsan hatırlatmalar ekran kapalıyken ve uygulama kapalıyken de zamanında gelir.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ayarları aç')),
+        ],
+      ),
+    );
+    if (go != true) return;
+    final status = await Permission.ignoreBatteryOptimizations.request();
+    if (!status.isGranted) await openAppSettings();
   }
 
   Future<void> _pickActiveHours(
@@ -239,6 +277,23 @@ class _Stepper extends StatelessWidget {
           onTap: onPlus,
         ),
       ],
+    );
+  }
+}
+
+/// Pil optimizasyonu durumu: kapalıysa hatırlatmalar güvende demektir.
+class _BatteryStatus extends StatelessWidget {
+  const _BatteryStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: Permission.ignoreBatteryOptimizations.isGranted,
+      builder: (context, snap) {
+        final granted = snap.data;
+        if (granted == null) return const ValueTrailing('…');
+        return ValueTrailing(granted ? 'Kapalı, iyi' : 'Açık');
+      },
     );
   }
 }

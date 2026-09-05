@@ -81,6 +81,12 @@ class NotificationService {
     return granted;
   }
 
+  /// Android 14+ için tam ekran alarm izni (sistem ayar sayfasını açar).
+  Future<void> requestFullScreenIntentPermission() async {
+    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await android?.requestFullScreenIntentPermission();
+  }
+
   NotificationDetails _details({
     required String channelId,
     required String channelName,

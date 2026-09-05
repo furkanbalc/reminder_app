@@ -355,6 +355,7 @@ class _TypeCard extends StatelessWidget {
       borderWidth: selected ? 2 : 1,
       onTap: onTap,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
