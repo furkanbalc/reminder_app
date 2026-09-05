@@ -482,3 +482,63 @@ class SheetHeader extends StatelessWidget {
     );
   }
 }
+
+/// Sekme sayfalarının ortak başlığı: başlık her sayfada aynı yükseklikte durur,
+/// sağdaki düğme ve alt yazı hizayı bozmaz.
+class PageHeader extends StatelessWidget {
+  const PageHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: 44,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.display(context, size: 28),
+                    ),
+                  ),
+                ),
+                ?trailing,
+              ],
+            ),
+          ),
+          if (subtitle != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                subtitle!,
+                style: AppText.body(
+                  context,
+                  size: 13,
+                  weight: FontWeight.w500,
+                  color: c.mute,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

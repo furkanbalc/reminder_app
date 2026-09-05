@@ -35,36 +35,12 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 2,
-                        children: [
-                          Text(
-                            fmtDayHeader(now),
-                            style: AppText.body(
-                              context,
-                              size: 13,
-                              weight: FontWeight.w500,
-                              color: c.mute,
-                            ),
-                          ),
-                          Text(
-                            greeting(now),
-                            style: AppText.display(context, size: 26),
-                          ),
-                        ],
-                      ),
-                    ),
-                    CircleIconButton(
-                      icon: Icons.notifications_none_rounded,
-                      onTap: () => _showReminderStatus(context, ref),
-                    ),
-                  ],
+              PageHeader(
+                title: greeting(now),
+                subtitle: fmtDayHeader(now),
+                trailing: CircleIconButton(
+                  icon: Icons.notifications_none_rounded,
+                  onTap: () => _showReminderStatus(context, ref),
                 ),
               ),
               const SizedBox(height: 14),

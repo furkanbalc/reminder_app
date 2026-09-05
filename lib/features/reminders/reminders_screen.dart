@@ -29,23 +29,16 @@ class RemindersScreen extends ConsumerWidget {
             spacing: 10,
             children: [
               Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Hatırlatıcılar',
-                        style: AppText.display(context, size: 28),
-                      ),
-                    ),
-                    CircleIconButton(
-                      icon: Icons.add_rounded,
-                      color: c.amber,
-                      iconColor: Colors.white,
-                      bordered: false,
-                      onTap: () => _openForm(context),
-                    ),
-                  ],
+                padding: const EdgeInsets.only(bottom: 8),
+                child: PageHeader(
+                  title: 'Hatırlatıcılar',
+                  trailing: CircleIconButton(
+                    icon: Icons.add_rounded,
+                    color: c.amber,
+                    iconColor: Colors.white,
+                    bordered: false,
+                    onTap: () => _openForm(context),
+                  ),
                 ),
               ),
               if (reminders.isEmpty)

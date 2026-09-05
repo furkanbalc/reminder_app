@@ -36,13 +36,7 @@ class SettingsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 18,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: Text(
-                  'Ayarlar',
-                  style: AppText.display(context, size: 28),
-                ),
-              ),
+              const PageHeader(title: 'Ayarlar'),
               _Section(
                 title: 'Su hedefi',
                 children: [
