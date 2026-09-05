@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:alarm/alarm.dart';
 import 'package:alarm/utils/alarm_set.dart';
+import 'package:flutter/material.dart' show Color;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/models/enums.dart';
@@ -92,6 +93,8 @@ class AlarmService {
           body: body,
           stopButton: stopButton,
           androidSnoozeButton: snoozeLabel,
+          icon: 'ic_notification',
+          iconColor: const Color(0xFF1F87B4),
         ),
         payload: payload,
         androidSnoozeDuration: snooze,

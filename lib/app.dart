@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/utils/android_hints.dart';
 import 'features/home/widgets/add_water_sheet.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/reminders/reminder_alarm_screen.dart';
@@ -121,6 +122,17 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     try {
       _onWidgetClick(await widgets.initialLaunchUri());
     } catch (_) {}
+
+    if (settings.alertType.usesAlarm) {
+      final ctx = navigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        await showFullScreenAlarmHint(
+          ctx,
+          prefs: ref.read(sharedPreferencesProvider),
+          notifications: notifications,
+        );
+      }
+    }
   }
 
   void _onWidgetClick(Uri? uri) {

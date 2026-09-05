@@ -42,9 +42,10 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
       title: 'Su içme vakti',
       subtitle: 'Bugün ${fmtLiters(total)} / ${fmtLiters(settings.goalMl)} L'
           '${lastEntry == null ? '' : ' · Son içiş ${fmtTime(lastEntry.timestamp)}'}',
-      extra: Row(
-        mainAxisSize: MainAxisSize.min,
+      extra: Wrap(
+        alignment: WrapAlignment.center,
         spacing: 10,
+        runSpacing: 10,
         children: [
           for (final a in amounts)
             _AmountChip(
@@ -85,7 +86,7 @@ class _AmountChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? Colors.white : Colors.white.withValues(alpha: 0.12),

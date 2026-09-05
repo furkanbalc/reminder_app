@@ -25,7 +25,7 @@
       <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#04213A" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <g transform="translate(512 512) scale(0.8) translate(-512 -500)">
+  <g transform="translate(512 512) scale(1.29) translate(-512 -500)">
     <circle cx="512" cy="500" r="330" fill="none" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="58"/>
     <path d="M512 170 A330 330 0 1 1 287 741" fill="none" stroke="url(#ring)" stroke-width="58" stroke-linecap="round" filter="url(#soft)"/>
     <path d="M512 300 C512 300 668 480 668 598 A156 156 0 0 1 356 598 C356 480 512 300 512 300 Z" fill="url(#drop)" filter="url(#shadow)"/>

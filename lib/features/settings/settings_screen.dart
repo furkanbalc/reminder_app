@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/android_hints.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/enums.dart';
@@ -110,7 +111,17 @@ class SettingsScreen extends ConsumerWidget {
                       height: 28,
                       items: [for (final t in AlertType.values) t.label],
                       selected: s.alertType.index,
-                      onChanged: (i) => save(s.copyWith(alertType: AlertType.values[i])),
+                      onChanged: (i) async {
+                        final type = AlertType.values[i];
+                        await save(s.copyWith(alertType: type));
+                        if (type.usesAlarm && context.mounted) {
+                          await showFullScreenAlarmHint(
+                            context,
+                            prefs: ref.read(sharedPreferencesProvider),
+                            notifications: ref.read(notificationServiceProvider),
+                          );
+                        }
+                      },
                     ),
                   ),
                   if (s.alertType == AlertType.escalating)

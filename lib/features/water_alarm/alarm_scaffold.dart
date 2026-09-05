@@ -59,7 +59,7 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
       _sub = Alarm.ringing.listen((set) {
         if (!_handled && mounted && !set.containsId(id)) {
           _handled = true;
-          Navigator.of(context).maybePop();
+          Navigator.of(context).pop();
         }
       });
     }
@@ -79,7 +79,8 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
     try {
       await action();
     } finally {
-      if (mounted) Navigator.of(context).maybePop();
+      // PopScope geri tuşunu engellediği için maybePop çalışmaz; doğrudan kapat.
+      if (mounted) Navigator.of(context).pop();
     }
   }
 

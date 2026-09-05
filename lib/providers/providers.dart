@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -234,18 +237,44 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   /// Ayar değişikliğinde: yeniden yükle ve hatırlatmaları kur.
   Future<void> rescheduleReminders() => _refreshAndReschedule();
 
+  bool _rescheduling = false;
+  bool _rescheduleDirty = false;
+
   Future<WaterState> _refreshAndReschedule() async {
     final s = ref.read(settingsProvider);
     final st = await _load(s);
     state = AsyncData(st);
     await _pushWidget(st, s);
-    await ref.read(waterSchedulerProvider).reschedule(
-          s: s,
-          todayTotalMl: st.todayTotalMl,
-          lastIntakeAt: st.lastIntakeAt,
-          weekSummary: _weekSummary(st, s),
-        );
+    unawaited(_rescheduleInBackground());
     return st;
+  }
+
+  /// Onlarca bildirim/alarm kurmak birkaç saniye sürebilir; arayüzü bekletmez.
+  /// Üst üste çağrılırsa en son durumla bir kez daha çalışır.
+  Future<void> _rescheduleInBackground() async {
+    if (_rescheduling) {
+      _rescheduleDirty = true;
+      return;
+    }
+    _rescheduling = true;
+    try {
+      do {
+        _rescheduleDirty = false;
+        final s = ref.read(settingsProvider);
+        final st = state.value;
+        if (st == null) break;
+        await ref.read(waterSchedulerProvider).reschedule(
+              s: s,
+              todayTotalMl: st.todayTotalMl,
+              lastIntakeAt: st.lastIntakeAt,
+              weekSummary: _weekSummary(st, s),
+            );
+      } while (_rescheduleDirty);
+    } catch (e) {
+      debugPrint('Su hatırlatmaları kurulamadı: $e');
+    } finally {
+      _rescheduling = false;
+    }
   }
 
   static String _weekSummary(WaterState st, WaterSettings s) {
