@@ -1,5 +1,8 @@
 import 'package:alarm/alarm.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +15,19 @@ import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Yazı tipleri paketin içinde (google_fonts/ klasörü); internetten indirilmez.
+  GoogleFonts.config.allowRuntimeFetching = false;
+  LicenseRegistry.addLicense(() async* {
+    for (final f in [
+      'google_fonts/OFL-Outfit.txt',
+      'google_fonts/OFL-DMSans.txt',
+    ]) {
+      yield LicenseEntryWithLineBreaks([
+        'google_fonts',
+      ], await rootBundle.loadString(f));
+    }
+  });
 
   await initializeDateFormatting('tr_TR');
   Intl.defaultLocale = 'tr_TR';
