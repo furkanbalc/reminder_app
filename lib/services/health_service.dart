@@ -8,7 +8,8 @@ class HealthService {
   final Health _health = Health();
   bool _configured = false;
 
-  String get platformLabel => Platform.isIOS ? 'Apple Sağlık' : 'Health Connect';
+  String get platformLabel =>
+      Platform.isIOS ? 'Apple Sağlık' : 'Health Connect';
 
   Future<void> _ensure() async {
     if (_configured) return;
@@ -61,7 +62,11 @@ class HealthService {
   Future<void> deleteWater(DateTime at) async {
     try {
       await _ensure();
-      await _health.delete(type: HealthDataType.WATER, startTime: at, endTime: at);
+      await _health.delete(
+        type: HealthDataType.WATER,
+        startTime: at,
+        endTime: at,
+      );
     } catch (e) {
       debugPrint('Sağlık verisi silinemedi: $e');
     }

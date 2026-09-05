@@ -48,7 +48,11 @@ class AppCard extends StatelessWidget {
 }
 
 class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key, this.padding = const EdgeInsets.only(left: 4)});
+  const SectionLabel(
+    this.text, {
+    super.key,
+    this.padding = const EdgeInsets.only(left: 4),
+  });
 
   final String text;
   final EdgeInsetsGeometry padding;
@@ -144,8 +148,7 @@ class SegmentedControl extends StatelessWidget {
         mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
         spacing: 2,
         children: [
-          for (var i = 0; i < items.length; i++)
-            _segment(context, i, c),
+          for (var i = 0; i < items.length; i++) _segment(context, i, c),
         ],
       ),
     );
@@ -238,8 +241,18 @@ class PrimaryButton extends StatelessWidget {
               Text(
                 label,
                 style: outlined
-                    ? AppText.body(context, size: 15, weight: FontWeight.w600, color: fg)
-                    : AppText.display(context, size: height >= 60 ? 20 : 17, weight: FontWeight.w600, color: fg),
+                    ? AppText.body(
+                        context,
+                        size: 15,
+                        weight: FontWeight.w600,
+                        color: fg,
+                      )
+                    : AppText.display(
+                        context,
+                        size: height >= 60 ? 20 : 17,
+                        weight: FontWeight.w600,
+                        color: fg,
+                      ),
               ),
             ],
           ),
@@ -288,7 +301,12 @@ class AppChip extends StatelessWidget {
           widthFactor: 1,
           child: Text(
             label,
-            style: AppText.body(context, size: 13, weight: FontWeight.w600, color: fg),
+            style: AppText.body(
+              context,
+              size: 13,
+              weight: FontWeight.w600,
+              color: fg,
+            ),
           ),
         ),
       ),
@@ -319,7 +337,9 @@ class CircleIconButton extends StatelessWidget {
     final c = context.colors;
     return Material(
       color: color ?? c.card,
-      shape: CircleBorder(side: bordered ? BorderSide(color: c.line) : BorderSide.none),
+      shape: CircleBorder(
+        side: bordered ? BorderSide(color: c.line) : BorderSide.none,
+      ),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
@@ -366,7 +386,10 @@ class SettingsRow extends StatelessWidget {
           children: [
             ?leading,
             Expanded(
-              child: Text(label, style: AppText.body(context, size: 15, weight: FontWeight.w500)),
+              child: Text(
+                label,
+                style: AppText.body(context, size: 15, weight: FontWeight.w500),
+              ),
             ),
             trailing,
           ],
@@ -388,7 +411,15 @@ class ValueTrailing extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: 4,
       children: [
-        Text(text, style: AppText.body(context, size: 15, weight: FontWeight.w500, color: c.mute)),
+        Text(
+          text,
+          style: AppText.body(
+            context,
+            size: 15,
+            weight: FontWeight.w500,
+            color: c.mute,
+          ),
+        ),
         Icon(Icons.chevron_right_rounded, size: 20, color: c.mute),
       ],
     );
@@ -428,11 +459,16 @@ class SheetHeader extends StatelessWidget {
         Container(
           width: 36,
           height: 4,
-          decoration: BoxDecoration(color: c.toggleOff, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+            color: c.toggleOff,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
         Row(
           children: [
-            Expanded(child: Text(title, style: AppText.display(context, size: 22))),
+            Expanded(
+              child: Text(title, style: AppText.display(context, size: 22)),
+            ),
             CircleIconButton(
               icon: Icons.close_rounded,
               size: 36,

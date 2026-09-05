@@ -20,8 +20,10 @@ class ReminderScheduler {
   static const _alarmBase = 5000;
   static const payloadPrefix = 'reminder:';
 
-  static int notifId(int reminderId, [int k = 0]) => _notifBase + reminderId * 20 + k;
-  static int alarmId(int reminderId, [int j = 0]) => _alarmBase + reminderId * 10 + j;
+  static int notifId(int reminderId, [int k = 0]) =>
+      _notifBase + reminderId * 20 + k;
+  static int alarmId(int reminderId, [int j = 0]) =>
+      _alarmBase + reminderId * 10 + j;
   static bool isReminderAlarmId(int id) => id >= _alarmBase;
   static int reminderIdFromAlarmId(int id) => (id - _alarmBase) ~/ 10;
   static String payloadFor(int reminderId) => '$payloadPrefix$reminderId';
@@ -40,11 +42,21 @@ class ReminderScheduler {
     final body = 'Hatırlatma · ${r.repeat.metaLabel}';
 
     if (r.alertType.usesNotification) {
-      await _scheduleRepeating(r, now, next, offsetK: 0, title: r.title, body: body, minutesBefore: 0);
+      await _scheduleRepeating(
+        r,
+        now,
+        next,
+        offsetK: 0,
+        title: r.title,
+        body: body,
+        minutesBefore: 0,
+      );
     }
     if (r.preAlertMin > 0) {
       await _scheduleRepeating(
-        r, now, next,
+        r,
+        now,
+        next,
         offsetK: 10,
         title: '${r.preAlertMin} dk sonra: ${r.title}',
         body: 'Yaklaşan hatırlatma',
@@ -62,22 +74,31 @@ class ReminderScheduler {
         }
       case AlertType.escalating:
         await _alarm(
-          r, s, alarmId(r.id), next.add(Duration(minutes: s.escalationMin)),
+          r,
+          s,
+          alarmId(r.id),
+          next.add(Duration(minutes: s.escalationMin)),
           'Yanıt vermedin · ${r.repeat.metaLabel}',
         );
     }
   }
 
-  Future<void> _alarm(Reminder r, WaterSettings s, int id, DateTime at, String body) => _alarms.schedule(
-        id: id,
-        at: at,
-        title: r.title,
-        body: body,
-        sound: r.sound,
-        payload: payloadFor(r.id),
-        snooze: Duration(minutes: s.snoozeMin),
-        snoozeLabel: '${s.snoozeMin} dk ertele',
-      );
+  Future<void> _alarm(
+    Reminder r,
+    WaterSettings s,
+    int id,
+    DateTime at,
+    String body,
+  ) => _alarms.schedule(
+    id: id,
+    at: at,
+    title: r.title,
+    body: body,
+    sound: r.sound,
+    payload: payloadFor(r.id),
+    snooze: Duration(minutes: s.snoozeMin),
+    snoozeLabel: '${s.snoozeMin} dk ertele',
+  );
 
   /// Tekrar kuralına göre sistem bildirimi kurar. [minutesBefore] ön bildirim için.
   Future<void> _scheduleRepeating(
@@ -91,7 +112,8 @@ class ReminderScheduler {
   }) async {
     final details = _notifications.reminderDetails();
     final shift = Duration(minutes: minutesBefore);
-    Future<void> put(int id, DateTime at, DateTimeComponents? match) => _notifications.schedule(
+    Future<void> put(int id, DateTime at, DateTimeComponents? match) =>
+        _notifications.schedule(
           id: id,
           title: title,
           body: body,
@@ -107,12 +129,24 @@ class ReminderScheduler {
       case RepeatRule.daily:
         await put(notifId(r.id, offsetK), next, DateTimeComponents.time);
       case RepeatRule.weekly:
-        await put(notifId(r.id, offsetK), next, DateTimeComponents.dayOfWeekAndTime);
+        await put(
+          notifId(r.id, offsetK),
+          next,
+          DateTimeComponents.dayOfWeekAndTime,
+        );
       case RepeatRule.monthly:
-        await put(notifId(r.id, offsetK), next, DateTimeComponents.dayOfMonthAndTime);
+        await put(
+          notifId(r.id, offsetK),
+          next,
+          DateTimeComponents.dayOfMonthAndTime,
+        );
       case RepeatRule.weekdays:
         for (var wd = DateTime.monday; wd <= DateTime.friday; wd++) {
-          await put(notifId(r.id, offsetK + wd), _nextWeekday(r, now, wd), DateTimeComponents.dayOfWeekAndTime);
+          await put(
+            notifId(r.id, offsetK + wd),
+            _nextWeekday(r, now, wd),
+            DateTimeComponents.dayOfWeekAndTime,
+          );
         }
     }
   }
@@ -120,7 +154,13 @@ class ReminderScheduler {
   DateTime _nextWeekday(Reminder r, DateTime from, int weekday) {
     var day = DateTime(from.year, from.month, from.day);
     for (var i = 0; i < 8; i++) {
-      final t = DateTime(day.year, day.month, day.day, r.dateTime.hour, r.dateTime.minute);
+      final t = DateTime(
+        day.year,
+        day.month,
+        day.day,
+        r.dateTime.hour,
+        r.dateTime.minute,
+      );
       if (day.weekday == weekday && t.isAfter(from)) return t;
       day = day.add(const Duration(days: 1));
     }
@@ -151,7 +191,9 @@ class ReminderScheduler {
   }
 
   Future<void> cancel(int reminderId) async {
-    await _notifications.cancelMany([for (var k = 0; k < 20; k++) notifId(reminderId, k)]);
+    await _notifications.cancelMany([
+      for (var k = 0; k < 20; k++) notifId(reminderId, k),
+    ]);
     await _alarms.stop(alarmId(reminderId, 0));
     await _alarms.stop(alarmId(reminderId, 1));
   }

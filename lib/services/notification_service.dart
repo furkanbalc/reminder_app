@@ -9,8 +9,10 @@ import 'package:timezone/timezone.dart' as tz;
 
 /// flutter_local_notifications sarmalayıcısı. Sessiz "Bildirim" modu bunu kullanır.
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
-  final StreamController<NotificationResponse> _responses = StreamController.broadcast();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+  final StreamController<NotificationResponse> _responses =
+      StreamController.broadcast();
 
   static const waterChannelId = 'su_hatirlatma';
   static const reminderChannelId = 'not_hatirlatici';
@@ -68,23 +70,34 @@ class NotificationService {
 
   Future<bool> requestPermissions() async {
     var granted = true;
-    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       granted = await android.requestNotificationsPermission() ?? true;
       if (await android.canScheduleExactNotifications() == false) {
         await android.requestExactAlarmsPermission();
       }
     }
-    final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
     if (ios != null) {
-      granted = await ios.requestPermissions(alert: true, badge: true, sound: true) ?? true;
+      granted =
+          await ios.requestPermissions(alert: true, badge: true, sound: true) ??
+          true;
     }
     return granted;
   }
 
   /// Android 14+ için tam ekran alarm izni (sistem ayar sayfasını açar).
   Future<void> requestFullScreenIntentPermission() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.requestFullScreenIntentPermission();
   }
 
@@ -115,31 +128,31 @@ class NotificationService {
   }
 
   NotificationDetails waterDetails({required int glassMl}) => _details(
-        channelId: waterChannelId,
-        channelName: 'Su hatırlatmaları',
-        channelDescription: 'Düzenli su içme hatırlatmaları',
-        actions: [
-          AndroidNotificationAction(
-            drankActionId,
-            'Su İçtim ($glassMl ml)',
-            showsUserInterface: true,
-          ),
-        ],
-        darwinCategory: waterCategory,
-      );
+    channelId: waterChannelId,
+    channelName: 'Su hatırlatmaları',
+    channelDescription: 'Düzenli su içme hatırlatmaları',
+    actions: [
+      AndroidNotificationAction(
+        drankActionId,
+        'Su İçtim ($glassMl ml)',
+        showsUserInterface: true,
+      ),
+    ],
+    darwinCategory: waterCategory,
+  );
 
   /// Aksiyon butonu olmayan bilgi bildirimi (akşam hatırlatması, haftalık özet).
   NotificationDetails infoDetails() => _details(
-        channelId: waterChannelId,
-        channelName: 'Su hatırlatmaları',
-        channelDescription: 'Düzenli su içme hatırlatmaları',
-      );
+    channelId: waterChannelId,
+    channelName: 'Su hatırlatmaları',
+    channelDescription: 'Düzenli su içme hatırlatmaları',
+  );
 
   NotificationDetails reminderDetails() => _details(
-        channelId: reminderChannelId,
-        channelName: 'Hatırlatıcılar',
-        channelDescription: 'Not hatırlatıcıları',
-      );
+    channelId: reminderChannelId,
+    channelName: 'Hatırlatıcılar',
+    channelDescription: 'Not hatırlatıcıları',
+  );
 
   Future<void> schedule({
     required int id,

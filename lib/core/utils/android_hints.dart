@@ -28,8 +28,14 @@ Future<void> showFullScreenAlarmHint(
         'tam ekran bildirim izni gerekiyor. Ayrıca pil optimizasyonunu bu uygulama için kapatman önerilir.',
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Sonra')),
-        TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('İzni aç')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Sonra'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          child: const Text('İzni aç'),
+        ),
       ],
     ),
   );

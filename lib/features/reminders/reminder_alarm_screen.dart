@@ -8,9 +8,14 @@ import '../water_alarm/alarm_scaffold.dart';
 
 /// Hatırlatıcı çaldığında (alarm) veya bildirimine dokunulduğunda açılan ekran.
 class ReminderAlarmScreen extends ConsumerWidget {
-  const ReminderAlarmScreen({super.key, required this.reminderId, this.alarmId});
+  const ReminderAlarmScreen({
+    super.key,
+    required this.reminderId,
+    this.alarmId,
+  });
 
   final int reminderId;
+
   /// Çalan alarmın kimliği; bildirimden gelindiyse null.
   final int? alarmId;
 
@@ -31,7 +36,9 @@ class ReminderAlarmScreen extends ConsumerWidget {
       label: 'Hatırlatma',
       icon: Icons.notifications_none_rounded,
       title: reminder?.title ?? 'Hatırlatma',
-      subtitle: reminder == null ? '' : '${reminder.repeat.metaLabel} · ${reminder.alertType.label}',
+      subtitle: reminder == null
+          ? ''
+          : '${reminder.repeat.metaLabel} · ${reminder.alertType.label}',
       primaryLabel: 'Tamam, hallettim',
       onPrimary: () async {
         await stopIfRinging();

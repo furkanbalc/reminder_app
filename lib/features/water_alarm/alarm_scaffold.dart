@@ -43,9 +43,12 @@ class AlarmScaffold extends StatefulWidget {
   State<AlarmScaffold> createState() => _AlarmScaffoldState();
 }
 
-class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProviderStateMixin {
-  late final AnimationController _ripple =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))..repeat();
+class _AlarmScaffoldState extends State<AlarmScaffold>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ripple = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  )..repeat();
   StreamSubscription<AlarmSet>? _sub;
   bool _busy = false;
   bool _handled = false;
@@ -98,11 +101,23 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                Text(widget.label.toUpperCase(), style: AppText.label(context, color: Colors.white.withValues(alpha: 0.7))),
+                Text(
+                  widget.label.toUpperCase(),
+                  style: AppText.label(
+                    context,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   TimeOfDay.now().format(context),
-                  style: AppText.display(context, size: 64, color: white, height: 1, letterSpacing: -1.5),
+                  style: AppText.display(
+                    context,
+                    size: 64,
+                    color: white,
+                    height: 1,
+                    letterSpacing: -1.5,
+                  ),
                 ),
                 Expanded(
                   child: Column(
@@ -116,12 +131,22 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
                           Text(
                             widget.title,
                             textAlign: TextAlign.center,
-                            style: AppText.display(context, size: 30, weight: FontWeight.w600, color: white),
+                            style: AppText.display(
+                              context,
+                              size: 30,
+                              weight: FontWeight.w600,
+                              color: white,
+                            ),
                           ),
                           Text(
                             widget.subtitle,
                             textAlign: TextAlign.center,
-                            style: AppText.body(context, size: 15, weight: FontWeight.w500, color: white75),
+                            style: AppText.body(
+                              context,
+                              size: 15,
+                              weight: FontWeight.w500,
+                              color: white75,
+                            ),
                           ),
                         ],
                       ),
@@ -150,7 +175,12 @@ class _AlarmScaffoldState extends State<AlarmScaffold> with SingleTickerProvider
                 Text(
                   widget.caption,
                   textAlign: TextAlign.center,
-                  style: AppText.body(context, size: 12, weight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.55)),
+                  style: AppText.body(
+                    context,
+                    size: 12,
+                    weight: FontWeight.w500,
+                    color: Colors.white.withValues(alpha: 0.55),
+                  ),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -206,7 +236,10 @@ class _RippleIcon extends StatelessWidget {
         height: 200,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3 * opacity), width: 2),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3 * opacity),
+            width: 2,
+          ),
         ),
       ),
     );

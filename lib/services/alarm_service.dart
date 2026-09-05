@@ -38,13 +38,16 @@ class AlarmService {
     final raw = _prefs.getString(_mapKey);
     if (raw == null) return {};
     try {
-      return (jsonDecode(raw) as Map).map((k, v) => MapEntry(k as String, (v as Map).cast<String, Object?>()));
+      return (jsonDecode(raw) as Map).map(
+        (k, v) => MapEntry(k as String, (v as Map).cast<String, Object?>()),
+      );
     } catch (_) {
       return {};
     }
   }
 
-  Future<void> _saveKitIds(Map<String, Map<String, Object?>> m) => _prefs.setString(_mapKey, jsonEncode(m));
+  Future<void> _saveKitIds(Map<String, Map<String, Object?>> m) =>
+      _prefs.setString(_mapKey, jsonEncode(m));
 
   Future<void> schedule({
     required int id,
@@ -68,7 +71,8 @@ class AlarmService {
         snoozeMin: snooze?.inMinutes ?? 10,
       );
       if (kitId != null) {
-        final m = _kitIds()..['$id'] = {'kit': kitId, 'at': at.millisecondsSinceEpoch};
+        final m = _kitIds()
+          ..['$id'] = {'kit': kitId, 'at': at.millisecondsSinceEpoch};
         await _saveKitIds(m);
         return;
       }
@@ -87,7 +91,8 @@ class AlarmService {
         volumeSettings: VolumeSettings.fade(
           volume: 0.8,
           fadeDuration: const Duration(seconds: 3),
-          showSystemUI: false, // ses seviyesi ayarlanırken sistem ses paneli görünmesin
+          showSystemUI:
+              false, // ses seviyesi ayarlanırken sistem ses paneli görünmesin
         ),
         notificationSettings: NotificationSettings(
           title: title,
@@ -120,7 +125,9 @@ class AlarmService {
 
   /// Çalmakta olan alarmlar korunur; yalnızca bekleyenler iptal edilir.
   Future<void> stopWhere(bool Function(int id) test) async {
-    final ringing = Alarm.ringing.valueOrNull?.alarms.map((a) => a.id).toSet() ?? const <int>{};
+    final ringing =
+        Alarm.ringing.valueOrNull?.alarms.map((a) => a.id).toSet() ??
+        const <int>{};
     final now = DateTime.now();
     for (final a in await Alarm.getAlarms()) {
       if (!test(a.id) || ringing.contains(a.id)) continue;

@@ -15,8 +15,10 @@ enum AlertType {
   /// Bu tipte bir bildirim gönderilir mi?
   bool get usesNotification => this != AlertType.alarm;
 
-  static AlertType fromName(String? name) =>
-      AlertType.values.firstWhere((e) => e.name == name, orElse: () => AlertType.notification);
+  static AlertType fromName(String? name) => AlertType.values.firstWhere(
+    (e) => e.name == name,
+    orElse: () => AlertType.notification,
+  );
 }
 
 enum AlarmSound {
@@ -27,8 +29,10 @@ enum AlarmSound {
   final String label;
   final String assetPath;
 
-  static AlarmSound fromName(String? name) =>
-      AlarmSound.values.firstWhere((e) => e.name == name, orElse: () => AlarmSound.damla);
+  static AlarmSound fromName(String? name) => AlarmSound.values.firstWhere(
+    (e) => e.name == name,
+    orElse: () => AlarmSound.damla,
+  );
 }
 
 enum RepeatRule {
@@ -42,8 +46,10 @@ enum RepeatRule {
   final String label;
   final String metaLabel;
 
-  static RepeatRule fromName(String? name) =>
-      RepeatRule.values.firstWhere((e) => e.name == name, orElse: () => RepeatRule.none);
+  static RepeatRule fromName(String? name) => RepeatRule.values.firstWhere(
+    (e) => e.name == name,
+    orElse: () => RepeatRule.none,
+  );
 }
 
 enum AppThemeMode {
@@ -55,6 +61,8 @@ enum AppThemeMode {
   final String label;
   final ThemeMode mode;
 
-  static AppThemeMode fromName(String? name) =>
-      AppThemeMode.values.firstWhere((e) => e.name == name, orElse: () => AppThemeMode.system);
+  static AppThemeMode fromName(String? name) => AppThemeMode.values.firstWhere(
+    (e) => e.name == name,
+    orElse: () => AppThemeMode.system,
+  );
 }

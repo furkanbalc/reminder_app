@@ -82,11 +82,20 @@ class _BottomNav extends StatelessWidget {
                 color: on ? c.waterSoft : Colors.transparent,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(on ? activeIcon : icon, size: 22, color: on ? c.waterDeep : c.mute),
+              child: Icon(
+                on ? activeIcon : icon,
+                size: 22,
+                color: on ? c.waterDeep : c.mute,
+              ),
             ),
             Text(
               label,
-              style: AppText.body(context, size: 11, weight: FontWeight.w600, color: on ? c.waterDeep : c.mute),
+              style: AppText.body(
+                context,
+                size: 11,
+                weight: FontWeight.w600,
+                color: on ? c.waterDeep : c.mute,
+              ),
             ),
           ],
         ),

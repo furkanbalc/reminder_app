@@ -7,7 +7,11 @@ import '../data/repositories/reminder_repository.dart';
 import '../data/repositories/water_repository.dart';
 
 class ImportResult {
-  const ImportResult({required this.entriesAdded, required this.remindersAdded, required this.settings});
+  const ImportResult({
+    required this.entriesAdded,
+    required this.remindersAdded,
+    required this.settings,
+  });
   final int entriesAdded;
   final int remindersAdded;
   final WaterSettings? settings;
@@ -34,14 +38,20 @@ class BackupService {
       'reminders': [for (final r in reminders) r.toJson()],
     };
     final now = DateTime.now();
-    final stamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
-    final file = File('${Directory.systemTemp.path}/su-hatirlatici-yedek-$stamp.json');
+    final stamp =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final file = File(
+      '${Directory.systemTemp.path}/su-hatirlatici-yedek-$stamp.json',
+    );
     await file.writeAsString(const JsonEncoder.withIndent('  ').convert(json));
     return file;
   }
 
   /// Var olan kayıtları korur; aynı zaman ve miktardaki su kayıtlarını atlar.
-  Future<ImportResult> importFile(File file, {required WaterSettings current}) async {
+  Future<ImportResult> importFile(
+    File file, {
+    required WaterSettings current,
+  }) async {
     final data = jsonDecode(await file.readAsString());
     if (data is! Map || data['app'] != 'su_hatirlatici') {
       throw const FormatException('Bu dosya bir Su Hatırlatıcı yedeği değil');
@@ -65,7 +75,15 @@ class BackupService {
     }
     WaterSettings? settings;
     final sj = data['settings'];
-    if (sj is Map) settings = WaterSettings.fromJson(sj.cast<String, Object?>(), base: current);
-    return ImportResult(entriesAdded: entriesAdded, remindersAdded: remindersAdded, settings: settings);
+    if (sj is Map)
+      settings = WaterSettings.fromJson(
+        sj.cast<String, Object?>(),
+        base: current,
+      );
+    return ImportResult(
+      entriesAdded: entriesAdded,
+      remindersAdded: remindersAdded,
+      settings: settings,
+    );
   }
 }

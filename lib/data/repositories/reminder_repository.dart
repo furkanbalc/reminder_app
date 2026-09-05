@@ -13,7 +13,12 @@ class ReminderRepository {
   }
 
   Future<Reminder?> byId(int id) async {
-    final rows = await _db.query('reminders', where: 'id = ?', whereArgs: [id], limit: 1);
+    final rows = await _db.query(
+      'reminders',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     return rows.isEmpty ? null : Reminder.fromMap(rows.first);
   }
 

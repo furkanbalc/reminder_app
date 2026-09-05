@@ -76,17 +76,32 @@ ThemeData buildAppTheme(Brightness brightness) {
     splashFactory: InkSparkle.splashFactory,
   );
 
-  final textTheme = GoogleFonts.dmSansTextTheme(base.textTheme).apply(
-    bodyColor: c.ink,
-    displayColor: c.ink,
-  );
+  final textTheme = GoogleFonts.dmSansTextTheme(
+    base.textTheme,
+  ).apply(bodyColor: c.ink, displayColor: c.ink);
 
   return base.copyWith(
     textTheme: textTheme.copyWith(
-      displayLarge: GoogleFonts.outfit(fontSize: 52, fontWeight: FontWeight.w700, color: c.ink),
-      headlineMedium: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w700, color: c.ink),
-      titleLarge: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w700, color: c.ink),
-      titleMedium: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: c.ink),
+      displayLarge: GoogleFonts.outfit(
+        fontSize: 52,
+        fontWeight: FontWeight.w700,
+        color: c.ink,
+      ),
+      headlineMedium: GoogleFonts.outfit(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        color: c.ink,
+      ),
+      titleLarge: GoogleFonts.outfit(
+        fontSize: 22,
+        fontWeight: FontWeight.w700,
+        color: c.ink,
+      ),
+      titleMedium: GoogleFonts.outfit(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: c.ink,
+      ),
     ),
     extensions: [c],
     dividerColor: c.line,
@@ -96,7 +111,11 @@ ThemeData buildAppTheme(Brightness brightness) {
       foregroundColor: c.ink,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: GoogleFonts.outfit(fontSize: 19, fontWeight: FontWeight.w600, color: c.ink),
+      titleTextStyle: GoogleFonts.outfit(
+        fontSize: 19,
+        fontWeight: FontWeight.w600,
+        color: c.ink,
+      ),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: c.card,
@@ -141,8 +160,14 @@ ThemeData buildAppTheme(Brightness brightness) {
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.ink,
       // Zemin koyu temada açık renge döndüğü için aksiyon rengi her iki temada da koyu mavi kalır.
-      actionTextColor: brightness == Brightness.light ? c.water : AppColors.light.water,
-      contentTextStyle: GoogleFonts.dmSans(fontSize: 14, color: c.bg, fontWeight: FontWeight.w500),
+      actionTextColor: brightness == Brightness.light
+          ? c.water
+          : AppColors.light.water,
+      contentTextStyle: GoogleFonts.dmSans(
+        fontSize: 14,
+        color: c.bg,
+        fontWeight: FontWeight.w500,
+      ),
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),

@@ -38,7 +38,10 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 4),
-                child: Text('Ayarlar', style: AppText.display(context, size: 28)),
+                child: Text(
+                  'Ayarlar',
+                  style: AppText.display(context, size: 28),
+                ),
               ),
               _Section(
                 title: 'Su hedefi',
@@ -47,8 +50,12 @@ class SettingsScreen extends ConsumerWidget {
                     label: 'Günlük hedef',
                     trailing: _Stepper(
                       value: '${fmtLiters(s.goalMl)} L',
-                      onMinus: s.goalMl > 500 ? () => save(s.copyWith(goalMl: s.goalMl - 100)) : null,
-                      onPlus: s.goalMl < 6000 ? () => save(s.copyWith(goalMl: s.goalMl + 100)) : null,
+                      onMinus: s.goalMl > 500
+                          ? () => save(s.copyWith(goalMl: s.goalMl - 100))
+                          : null,
+                      onPlus: s.goalMl < 6000
+                          ? () => save(s.copyWith(goalMl: s.goalMl + 100))
+                          : null,
                     ),
                   ),
                   SettingsRow(
@@ -60,7 +67,10 @@ class SettingsScreen extends ConsumerWidget {
                         context,
                         title: 'Varsayılan bardak',
                         selected: s.defaultGlassMl,
-                        options: [for (final g in WaterSettings.glassOptions) PickerOption(g, '$g ml')],
+                        options: [
+                          for (final g in WaterSettings.glassOptions)
+                            PickerOption(g, '$g ml'),
+                        ],
                       );
                       if (v != null) save(s.copyWith(defaultGlassMl: v));
                     },
@@ -72,7 +82,9 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   SettingsRow(
                     label: 'Aktif saatler',
-                    trailing: ValueTrailing('${fmtMinutesOfDay(s.activeStartMin)} – ${fmtMinutesOfDay(s.activeEndMin)}'),
+                    trailing: ValueTrailing(
+                      '${fmtMinutesOfDay(s.activeStartMin)} – ${fmtMinutesOfDay(s.activeEndMin)}',
+                    ),
                     onTap: () => _pickHours(context, s, save, weekend: false),
                   ),
                   SettingsRow(
@@ -85,7 +97,9 @@ class SettingsScreen extends ConsumerWidget {
                   if (s.weekendEnabled)
                     SettingsRow(
                       label: 'Hafta sonu saatleri',
-                      trailing: ValueTrailing('${fmtMinutesOfDay(s.weekendStartMin)} – ${fmtMinutesOfDay(s.weekendEndMin)}'),
+                      trailing: ValueTrailing(
+                        '${fmtMinutesOfDay(s.weekendStartMin)} – ${fmtMinutesOfDay(s.weekendEndMin)}',
+                      ),
                       onTap: () => _pickHours(context, s, save, weekend: true),
                     ),
                   SettingsRow(
@@ -98,7 +112,12 @@ class SettingsScreen extends ConsumerWidget {
                         selected: s.intervalMin,
                         options: [
                           for (final m in WaterSettings.intervalOptions)
-                            PickerOption(m, m == WaterSettings.testIntervalMin ? '${fmtInterval(m)} (test)' : fmtInterval(m)),
+                            PickerOption(
+                              m,
+                              m == WaterSettings.testIntervalMin
+                                  ? '${fmtInterval(m)} (test)'
+                                  : fmtInterval(m),
+                            ),
                         ],
                       );
                       if (v != null) save(s.copyWith(intervalMin: v));
@@ -118,7 +137,9 @@ class SettingsScreen extends ConsumerWidget {
                           await showFullScreenAlarmHint(
                             context,
                             prefs: ref.read(sharedPreferencesProvider),
-                            notifications: ref.read(notificationServiceProvider),
+                            notifications: ref.read(
+                              notificationServiceProvider,
+                            ),
                           );
                         }
                       },
@@ -133,7 +154,10 @@ class SettingsScreen extends ConsumerWidget {
                           context,
                           title: 'Yanıt yoksa kaç dakika sonra alarm çalsın?',
                           selected: s.escalationMin,
-                          options: [for (final m in WaterSettings.escalationOptions) PickerOption(m, '$m dk')],
+                          options: [
+                            for (final m in WaterSettings.escalationOptions)
+                              PickerOption(m, '$m dk'),
+                          ],
                         );
                         if (v != null) save(s.copyWith(escalationMin: v));
                       },
@@ -146,7 +170,10 @@ class SettingsScreen extends ConsumerWidget {
                         context,
                         title: 'Erteleme süresi',
                         selected: s.snoozeMin,
-                        options: [for (final m in WaterSettings.snoozeOptions) PickerOption(m, '$m dk')],
+                        options: [
+                          for (final m in WaterSettings.snoozeOptions)
+                            PickerOption(m, '$m dk'),
+                        ],
                       );
                       if (v != null) save(s.copyWith(snoozeMin: v));
                     },
@@ -155,7 +182,10 @@ class SettingsScreen extends ConsumerWidget {
                     label: 'Alarm sesi',
                     trailing: ValueTrailing(s.sound.label),
                     onTap: () async {
-                      final v = await showSoundPicker(context, selected: s.sound);
+                      final v = await showSoundPicker(
+                        context,
+                        selected: s.sound,
+                      );
                       if (v != null) save(s.copyWith(sound: v));
                     },
                   ),
@@ -163,7 +193,8 @@ class SettingsScreen extends ConsumerWidget {
                     label: 'Hedefe ulaşınca sustur',
                     trailing: AppToggle(
                       value: s.stopWhenGoalReached,
-                      onChanged: (v) => save(s.copyWith(stopWhenGoalReached: v)),
+                      onChanged: (v) =>
+                          save(s.copyWith(stopWhenGoalReached: v)),
                     ),
                   ),
                   SettingsRow(
@@ -187,7 +218,8 @@ class SettingsScreen extends ConsumerWidget {
                 title: 'Entegrasyonlar',
                 children: [
                   SettingsRow(
-                    label: '${ref.read(healthServiceProvider).platformLabel}’a yaz',
+                    label:
+                        '${ref.read(healthServiceProvider).platformLabel}’a yaz',
                     last: !Platform.isIOS,
                     trailing: AppToggle(
                       value: s.healthSync,
@@ -200,7 +232,8 @@ class SettingsScreen extends ConsumerWidget {
                       last: true,
                       trailing: AppToggle(
                         value: s.useSystemAlarm,
-                        onChanged: (v) => _toggleSystemAlarm(context, ref, s, v),
+                        onChanged: (v) =>
+                            _toggleSystemAlarm(context, ref, s, v),
                       ),
                     ),
                 ],
@@ -232,7 +265,10 @@ class SettingsScreen extends ConsumerWidget {
                         context,
                         title: 'Tema',
                         selected: s.themeMode,
-                        options: [for (final m in AppThemeMode.values) PickerOption(m, m.label)],
+                        options: [
+                          for (final m in AppThemeMode.values)
+                            PickerOption(m, m.label),
+                        ],
                       );
                       if (v != null) save(s.copyWith(themeMode: v));
                     },
@@ -246,7 +282,9 @@ class SettingsScreen extends ConsumerWidget {
                     SettingsRow(
                       label: 'Tam ekran alarm izni',
                       trailing: const ValueTrailing('Ayarları aç'),
-                      onTap: () => ref.read(notificationServiceProvider).requestFullScreenIntentPermission(),
+                      onTap: () => ref
+                          .read(notificationServiceProvider)
+                          .requestFullScreenIntentPermission(),
                     ),
                   ],
                   SettingsRow(
@@ -255,10 +293,18 @@ class SettingsScreen extends ConsumerWidget {
                     trailing: const ValueTrailing('Kontrol et'),
                     onTap: () async {
                       final messenger = ScaffoldMessenger.of(context);
-                      final ok = await ref.read(notificationServiceProvider).requestPermissions();
-                      messenger.showSnackBar(SnackBar(
-                        content: Text(ok ? 'Bildirim izni verildi' : 'Bildirim izni verilmedi. Sistem ayarlarından açabilirsin.'),
-                      ));
+                      final ok = await ref
+                          .read(notificationServiceProvider)
+                          .requestPermissions();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok
+                                ? 'Bildirim izni verildi'
+                                : 'Bildirim izni verilmedi. Sistem ayarlarından açabilirsin.',
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -277,7 +323,12 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _toggleHealth(BuildContext context, WidgetRef ref, WaterSettings s, bool v) async {
+  Future<void> _toggleHealth(
+    BuildContext context,
+    WidgetRef ref,
+    WaterSettings s,
+    bool v,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final notifier = ref.read(settingsProvider.notifier);
     if (!v) {
@@ -286,19 +337,34 @@ class SettingsScreen extends ConsumerWidget {
     }
     final health = ref.read(healthServiceProvider);
     if (!await health.isAvailable()) {
-      messenger.showSnackBar(SnackBar(content: Text('${health.platformLabel} bu cihazda kullanılamıyor')));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${health.platformLabel} bu cihazda kullanılamıyor'),
+        ),
+      );
       return;
     }
     final ok = await health.requestAccess();
     if (!ok) {
-      messenger.showSnackBar(SnackBar(content: Text('${health.platformLabel} izni verilmedi')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('${health.platformLabel} izni verilmedi')),
+      );
       return;
     }
     await notifier.save(s.copyWith(healthSync: true));
-    messenger.showSnackBar(SnackBar(content: Text('Su kayıtları ${health.platformLabel}’a yazılacak')));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Su kayıtları ${health.platformLabel}’a yazılacak'),
+      ),
+    );
   }
 
-  Future<void> _toggleSystemAlarm(BuildContext context, WidgetRef ref, WaterSettings s, bool v) async {
+  Future<void> _toggleSystemAlarm(
+    BuildContext context,
+    WidgetRef ref,
+    WaterSettings s,
+    bool v,
+  ) async {
     final messenger = ScaffoldMessenger.of(context);
     final notifier = ref.read(settingsProvider.notifier);
     if (!v) {
@@ -308,12 +374,22 @@ class SettingsScreen extends ConsumerWidget {
     }
     final kit = ref.read(alarmKitServiceProvider);
     if (!await kit.isSupported()) {
-      messenger.showSnackBar(const SnackBar(content: Text('Sistem alarmı için iOS 26 veya üzeri gerekir')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Sistem alarmı için iOS 26 veya üzeri gerekir'),
+        ),
+      );
       return;
     }
     final ok = await kit.requestAuthorization();
     if (!ok) {
-      messenger.showSnackBar(const SnackBar(content: Text('Alarm izni verilmedi. Ayarlar > Su Hatırlatıcı’dan açabilirsin.')));
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Alarm izni verilmedi. Ayarlar > Su Hatırlatıcı’dan açabilirsin.',
+          ),
+        ),
+      );
       return;
     }
     await ref.read(alarmServiceProvider).configureSystemAlarm(true);
@@ -323,8 +399,15 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final file = await ref.read(backupServiceProvider).writeExport(ref.read(settingsProvider));
-      await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], subject: 'Su Hatırlatıcı yedeği'));
+      final file = await ref
+          .read(backupServiceProvider)
+          .writeExport(ref.read(settingsProvider));
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Su Hatırlatıcı yedeği',
+        ),
+      );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Dışa aktarılamadı: $e')));
     }
@@ -337,16 +420,24 @@ class SettingsScreen extends ConsumerWidget {
     final path = picked.first.path;
     if (path == null) return;
     try {
-      final result = await ref.read(backupServiceProvider).importFile(File(path), current: ref.read(settingsProvider));
+      final result = await ref
+          .read(backupServiceProvider)
+          .importFile(File(path), current: ref.read(settingsProvider));
       if (result.settings != null) {
-        await ref.read(settingsProvider.notifier).save(result.settings!.copyWith(onboardingDone: true));
+        await ref
+            .read(settingsProvider.notifier)
+            .save(result.settings!.copyWith(onboardingDone: true));
       }
       await ref.read(waterProvider.notifier).rescheduleReminders();
       ref.invalidate(remindersProvider);
       await ref.read(remindersProvider.notifier).syncAll();
-      messenger.showSnackBar(SnackBar(
-        content: Text('${result.entriesAdded} su kaydı, ${result.remindersAdded} hatırlatıcı içe aktarıldı'),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '${result.entriesAdded} su kaydı, ${result.remindersAdded} hatırlatıcı içe aktarıldı',
+          ),
+        ),
+      );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('İçe aktarılamadı: $e')));
     }
@@ -362,8 +453,14 @@ class SettingsScreen extends ConsumerWidget {
           'Bu uygulama için pil optimizasyonunu kapatırsan hatırlatmalar ekran kapalıyken ve uygulama kapalıyken de zamanında gelir.',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Ayarları aç')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ayarları aç'),
+          ),
         ],
       ),
     );
@@ -380,23 +477,35 @@ class SettingsScreen extends ConsumerWidget {
   }) async {
     final startMin0 = weekend ? s.weekendStartMin : s.activeStartMin;
     final endMin0 = weekend ? s.weekendEndMin : s.activeEndMin;
-    final start = await pickTime(context, TimeOfDay(hour: startMin0 ~/ 60, minute: startMin0 % 60), help: 'Başlangıç saati');
+    final start = await pickTime(
+      context,
+      TimeOfDay(hour: startMin0 ~/ 60, minute: startMin0 % 60),
+      help: 'Başlangıç saati',
+    );
     if (start == null || !context.mounted) return;
-    final end = await pickTime(context, TimeOfDay(hour: endMin0 ~/ 60, minute: endMin0 % 60), help: 'Bitiş saati');
+    final end = await pickTime(
+      context,
+      TimeOfDay(hour: endMin0 ~/ 60, minute: endMin0 % 60),
+      help: 'Bitiş saati',
+    );
     if (end == null) return;
     final startMin = start.hour * 60 + start.minute;
     final endMin = end.hour * 60 + end.minute;
     if (endMin <= startMin) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bitiş saati başlangıçtan sonra olmalı')),
+          const SnackBar(
+            content: Text('Bitiş saati başlangıçtan sonra olmalı'),
+          ),
         );
       }
       return;
     }
-    await save(weekend
-        ? s.copyWith(weekendStartMin: startMin, weekendEndMin: endMin)
-        : s.copyWith(activeStartMin: startMin, activeEndMin: endMin));
+    await save(
+      weekend
+          ? s.copyWith(weekendStartMin: startMin, weekendEndMin: endMin)
+          : s.copyWith(activeStartMin: startMin, activeEndMin: endMin),
+    );
   }
 }
 
@@ -411,13 +520,20 @@ class _Section extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
-      children: [SectionLabel(title), GroupedCard(children: children)],
+      children: [
+        SectionLabel(title),
+        GroupedCard(children: children),
+      ],
     );
   }
 }
 
 class _Stepper extends StatelessWidget {
-  const _Stepper({required this.value, required this.onMinus, required this.onPlus});
+  const _Stepper({
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
+  });
 
   final String value;
   final VoidCallback? onMinus;
@@ -438,7 +554,11 @@ class _Stepper extends StatelessWidget {
         ),
         SizedBox(
           width: 52,
-          child: Text(value, textAlign: TextAlign.center, style: AppText.display(context, size: 18)),
+          child: Text(
+            value,
+            textAlign: TextAlign.center,
+            style: AppText.display(context, size: 18),
+          ),
         ),
         CircleIconButton(
           icon: Icons.add_rounded,

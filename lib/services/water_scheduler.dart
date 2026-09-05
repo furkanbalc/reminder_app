@@ -37,10 +37,10 @@ class WaterScheduler {
   /// iOS'ta bekleyen bildirim sınırı 64. Alarm kurmak bildirimden çok daha pahalı
   /// (her biri ayrı sistem alarmı), o yüzden alarm modlarında daha az dilim kurulur.
   static int maxSlotsFor(AlertType type) => switch (type) {
-        AlertType.notification => 48,
-        AlertType.alarm => 24,
-        AlertType.escalating => 16,
-      };
+    AlertType.notification => 48,
+    AlertType.alarm => 24,
+    AlertType.escalating => 16,
+  };
 
   static bool isWaterId(int id) => id >= baseId && id < 2000;
 
@@ -76,8 +76,18 @@ class WaterScheduler {
     return result;
   }
 
-  DateTime? next(WaterSettings s, DateTime now, {required bool goalReachedToday, DateTime? lastIntakeAt}) {
-    final list = slots(s, now, goalReachedToday: goalReachedToday, lastIntakeAt: lastIntakeAt);
+  DateTime? next(
+    WaterSettings s,
+    DateTime now, {
+    required bool goalReachedToday,
+    DateTime? lastIntakeAt,
+  }) {
+    final list = slots(
+      s,
+      now,
+      goalReachedToday: goalReachedToday,
+      lastIntakeAt: lastIntakeAt,
+    );
     return list.isEmpty ? null : list.first.at;
   }
 
@@ -95,21 +105,38 @@ class WaterScheduler {
     final sw = Stopwatch()..start();
     await cancelAll();
     final now = DateTime.now();
-    final list = slots(s, now, goalReachedToday: todayTotalMl >= s.goalMl, lastIntakeAt: lastIntakeAt);
+    final list = slots(
+      s,
+      now,
+      goalReachedToday: todayTotalMl >= s.goalMl,
+      lastIntakeAt: lastIntakeAt,
+    );
     for (final slot in list) {
       await _schedule(slot, s, isSameDay(slot.at, now) ? todayTotalMl : null);
     }
     await _scheduleEveningNudge(s, now, todayTotalMl);
     await _scheduleWeeklySummary(s, now, weekSummary);
-    debugPrint('Su hatırlatmaları kuruldu: ${list.length} dilim, ${s.alertType.name}, ${sw.elapsedMilliseconds} ms');
+    debugPrint(
+      'Su hatırlatmaları kuruldu: ${list.length} dilim, ${s.alertType.name}, ${sw.elapsedMilliseconds} ms',
+    );
   }
 
-  Future<void> snooze({required WaterSettings s, required int todayTotalMl}) async {
+  Future<void> snooze({
+    required WaterSettings s,
+    required int todayTotalMl,
+  }) async {
     await _notifications.cancel(snoozeId);
     await _alarms.stop(snoozeId);
     await _alarms.stop(snoozeId + 1);
-    await _schedule(WaterSlot(id: snoozeId, at: DateTime.now().add(Duration(minutes: s.snoozeMin))), s, todayTotalMl,
-        escalationId: snoozeId + 1);
+    await _schedule(
+      WaterSlot(
+        id: snoozeId,
+        at: DateTime.now().add(Duration(minutes: s.snoozeMin)),
+      ),
+      s,
+      todayTotalMl,
+      escalationId: snoozeId + 1,
+    );
   }
 
   Future<void> cancelAll() async {
@@ -118,7 +145,12 @@ class WaterScheduler {
     await _alarms.stopWhere(isWaterId);
   }
 
-  Future<void> _schedule(WaterSlot slot, WaterSettings s, int? todayTotalMl, {int? escalationId}) async {
+  Future<void> _schedule(
+    WaterSlot slot,
+    WaterSettings s,
+    int? todayTotalMl, {
+    int? escalationId,
+  }) async {
     const title = 'Su içme vakti';
     final progress = todayTotalMl == null
         ? 'Günlük hedef ${fmtLiters(s.goalMl)} L'
@@ -149,7 +181,8 @@ class WaterScheduler {
         await _notifications.schedule(
           id: slot.id,
           title: title,
-          body: 'Bir bardak su iç. $progress · ${s.escalationMin} dk içinde yanıt yoksa alarm çalar',
+          body:
+              'Bir bardak su iç. $progress · ${s.escalationMin} dk içinde yanıt yoksa alarm çalar',
           at: slot.at,
           payload: payload,
           details: _notifications.waterDetails(glassMl: s.defaultGlassMl),
@@ -167,25 +200,44 @@ class WaterScheduler {
     }
   }
 
-  Future<void> _scheduleEveningNudge(WaterSettings s, DateTime now, int todayTotalMl) async {
+  Future<void> _scheduleEveningNudge(
+    WaterSettings s,
+    DateTime now,
+    int todayTotalMl,
+  ) async {
     if (!s.eveningNudge || todayTotalMl >= s.goalMl) return;
     final (_, endMin) = s.activeWindowFor(now);
-    final at = DateTime(now.year, now.month, now.day).add(Duration(minutes: endMin - 120));
+    final at = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(Duration(minutes: endMin - 120));
     if (!at.isAfter(now)) return;
     final remaining = s.goalMl - todayTotalMl;
     await _notifications.schedule(
       id: eveningId,
       title: 'Hedefe az kaldı',
-      body: 'Bugün ${fmtLiters(todayTotalMl)} L içtin, hedefe $remaining ml kaldı.',
+      body:
+          'Bugün ${fmtLiters(todayTotalMl)} L içtin, hedefe $remaining ml kaldı.',
       at: at,
       payload: payload,
       details: _notifications.infoDetails(),
     );
   }
 
-  Future<void> _scheduleWeeklySummary(WaterSettings s, DateTime now, String? summary) async {
+  Future<void> _scheduleWeeklySummary(
+    WaterSettings s,
+    DateTime now,
+    String? summary,
+  ) async {
     if (!s.weeklySummary || summary == null) return;
-    var sunday = DateTime(now.year, now.month, now.day + (DateTime.sunday - now.weekday) % 7, 20, 0);
+    var sunday = DateTime(
+      now.year,
+      now.month,
+      now.day + (DateTime.sunday - now.weekday) % 7,
+      20,
+      0,
+    );
     if (!sunday.isAfter(now)) sunday = sunday.add(const Duration(days: 7));
     await _notifications.schedule(
       id: weeklyId,

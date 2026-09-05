@@ -1,0 +1,84 @@
+# Sürekli entegrasyon: main dalına her push'ta ve main'e açılan her PR'da çalışır.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Aynı dalda üst üste push gelirse eski koşuyu iptal et, kaynak boşa gitmesin.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1) Kod kalitesi ve testler: en hızlı iş, her şeyin önünde.
+  test:
+    name: Analiz ve testler
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Flutter kur
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.0   # yerelde kullanılan sürümle aynı
+          cache: true               # SDK ve pub önbelleği; ikinci koşudan itibaren hızlı
+
+      - name: Bağımlılıkları indir
+        run: flutter pub get
+
+      - name: Biçim kontrolü
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: Statik analiz
+        run: flutter analyze --no-fatal-infos
+
+      - name: Birim testleri
+        run: flutter test --reporter expanded
+
+  # 2) Android derlemesi: testler geçtiyse APK üret ve indirilebilir yap.
+  android:
+    name: Android APK
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Flutter kur
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.0
+          cache: true
+
+      - name: Gradle önbelleği
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: APK derle (debug)
+        run: flutter build apk --debug
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: su-hatirlatici-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14

@@ -15,7 +15,9 @@ class AppDatabase {
             timestamp INTEGER NOT NULL
           )
         ''');
-        await db.execute('CREATE INDEX idx_water_ts ON water_entries(timestamp)');
+        await db.execute(
+          'CREATE INDEX idx_water_ts ON water_entries(timestamp)',
+        );
         await db.execute('''
           CREATE TABLE reminders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +34,9 @@ class AppDatabase {
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
-          await db.execute('ALTER TABLE reminders ADD COLUMN pre_alert_min INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE reminders ADD COLUMN pre_alert_min INTEGER NOT NULL DEFAULT 0',
+          );
         }
       },
     );

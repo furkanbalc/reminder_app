@@ -24,7 +24,10 @@ void main() {
   test('göreli zaman', () {
     final now = DateTime(2026, 9, 5, 13, 45);
     expect(fmtRelative(DateTime(2026, 9, 5, 14, 30), from: now), '45 dk sonra');
-    expect(fmtRelative(DateTime(2026, 9, 5, 16, 0), from: now), '2 sa 15 dk sonra');
+    expect(
+      fmtRelative(DateTime(2026, 9, 5, 16, 0), from: now),
+      '2 sa 15 dk sonra',
+    );
     expect(fmtRelative(DateTime(2026, 9, 6, 8, 0), from: now), 'yarın 08:00');
   });
 

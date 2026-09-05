@@ -28,7 +28,12 @@ Future<T?> showOptionSheet<T>(
       final c = ctx.colors;
       final color = accent ?? c.water;
       return Padding(
-        padding: EdgeInsets.fromLTRB(24, 10, 24, 16 + MediaQuery.paddingOf(ctx).bottom),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          10,
+          24,
+          16 + MediaQuery.paddingOf(ctx).bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           spacing: 16,
@@ -55,7 +60,11 @@ Future<T?> showOptionSheet<T>(
 }
 
 /// Ön dinlemeli alarm sesi seçici.
-Future<AlarmSound?> showSoundPicker(BuildContext context, {required AlarmSound selected, Color? accent}) {
+Future<AlarmSound?> showSoundPicker(
+  BuildContext context, {
+  required AlarmSound selected,
+  Color? accent,
+}) {
   return showModalBottomSheet<AlarmSound>(
     context: context,
     isScrollControlled: true,
@@ -81,7 +90,8 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
   void initState() {
     super.initState();
     _player.playerStateStream.listen((st) {
-      if (st.processingState == ProcessingState.completed && mounted) setState(() => _playing = null);
+      if (st.processingState == ProcessingState.completed && mounted)
+        setState(() => _playing = null);
     });
   }
 
@@ -108,7 +118,12 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
     final color = widget.accent ?? c.water;
     final sounds = AlarmSound.values;
     return Padding(
-      padding: EdgeInsets.fromLTRB(24, 10, 24, 16 + MediaQuery.paddingOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        10,
+        24,
+        16 + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 16,
@@ -122,7 +137,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                   last: i == sounds.length - 1,
                   onTap: () => Navigator.of(context).pop(sounds[i]),
                   leading: CircleIconButton(
-                    icon: _playing == sounds[i] ? Icons.stop_rounded : Icons.play_arrow_rounded,
+                    icon: _playing == sounds[i]
+                        ? Icons.stop_rounded
+                        : Icons.play_arrow_rounded,
                     size: 34,
                     color: c.seg,
                     bordered: false,
@@ -135,13 +152,20 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
                 ),
             ],
           ),
-          Text('Çalmak için oynat, seçmek için satıra dokun.', style: AppText.body(context, size: 12, color: c.mute)),
+          Text(
+            'Çalmak için oynat, seçmek için satıra dokun.',
+            style: AppText.body(context, size: 12, color: c.mute),
+          ),
         ],
       ),
     );
   }
 }
 
-Future<TimeOfDay?> pickTime(BuildContext context, TimeOfDay initial, {String? help}) {
+Future<TimeOfDay?> pickTime(
+  BuildContext context,
+  TimeOfDay initial, {
+  String? help,
+}) {
   return showTimePicker(context: context, initialTime: initial, helpText: help);
 }

@@ -44,8 +44,19 @@ class HomeScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 2,
                         children: [
-                          Text(fmtDayHeader(now), style: AppText.body(context, size: 13, weight: FontWeight.w500, color: c.mute)),
-                          Text(greeting(now), style: AppText.display(context, size: 26)),
+                          Text(
+                            fmtDayHeader(now),
+                            style: AppText.body(
+                              context,
+                              size: 13,
+                              weight: FontWeight.w500,
+                              color: c.mute,
+                            ),
+                          ),
+                          Text(
+                            greeting(now),
+                            style: AppText.display(context, size: 26),
+                          ),
                         ],
                       ),
                     ),
@@ -70,20 +81,46 @@ class HomeScreen extends ConsumerWidget {
                         textBaseline: TextBaseline.alphabetic,
                         spacing: 4,
                         children: [
-                          Text(fmtLiters(total), style: AppText.display(context, size: 52, height: 1, letterSpacing: -1)),
-                          Text('L', style: AppText.display(context, size: 22, weight: FontWeight.w600)),
+                          Text(
+                            fmtLiters(total),
+                            style: AppText.display(
+                              context,
+                              size: 52,
+                              height: 1,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                          Text(
+                            'L',
+                            style: AppText.display(
+                              context,
+                              size: 22,
+                              weight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                       Text(
                         'hedef ${fmtLiters(settings.goalMl)} L · %$pct',
-                        style: AppText.body(context, size: 14, weight: FontWeight.w500, color: c.mute),
+                        style: AppText.body(
+                          context,
+                          size: 14,
+                          weight: FontWeight.w500,
+                          color: c.mute,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
-              Center(child: _NextReminderChip(settings: settings, todayTotalMl: total, lastIntakeAt: water?.lastIntakeAt)),
+              Center(
+                child: _NextReminderChip(
+                  settings: settings,
+                  todayTotalMl: total,
+                  lastIntakeAt: water?.lastIntakeAt,
+                ),
+              ),
               const SizedBox(height: 16),
               _QuickAddRow(settings: settings),
               const SizedBox(height: 16),
@@ -103,24 +140,58 @@ class HomeScreen extends ConsumerWidget {
         final s = ref.read(settingsProvider);
         final next = ref.read(waterProvider).value?.nextReminder;
         Widget row(IconData icon, String label, String value) => Row(
-              spacing: 12,
-              children: [
-                Icon(icon, size: 20, color: c.mute),
-                Expanded(child: Text(label, style: AppText.body(ctx, size: 15, weight: FontWeight.w500))),
-                Text(value, style: AppText.body(ctx, size: 15, weight: FontWeight.w600, color: c.mute)),
-              ],
-            );
+          spacing: 12,
+          children: [
+            Icon(icon, size: 20, color: c.mute),
+            Expanded(
+              child: Text(
+                label,
+                style: AppText.body(ctx, size: 15, weight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              value,
+              style: AppText.body(
+                ctx,
+                size: 15,
+                weight: FontWeight.w600,
+                color: c.mute,
+              ),
+            ),
+          ],
+        );
         return Padding(
-          padding: EdgeInsets.fromLTRB(24, 10, 24, 24 + MediaQuery.paddingOf(ctx).bottom),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            10,
+            24,
+            24 + MediaQuery.paddingOf(ctx).bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 18,
             children: [
               const SheetHeader(title: 'Su Hatırlatmaları'),
-              row(Icons.alarm_rounded, 'Sonraki', next == null ? 'Bugün için yok' : '${fmtTime(next)} · ${fmtRelative(next)}'),
-              row(Icons.wb_sunny_outlined, 'Aktif saatler', '${fmtMinutesOfDay(s.activeStartMin)} – ${fmtMinutesOfDay(s.activeEndMin)}'),
+              row(
+                Icons.alarm_rounded,
+                'Sonraki',
+                next == null
+                    ? 'Bugün için yok'
+                    : '${fmtTime(next)} · ${fmtRelative(next)}',
+              ),
+              row(
+                Icons.wb_sunny_outlined,
+                'Aktif saatler',
+                '${fmtMinutesOfDay(s.activeStartMin)} – ${fmtMinutesOfDay(s.activeEndMin)}',
+              ),
               row(Icons.timer_outlined, 'Aralık', fmtInterval(s.intervalMin)),
-              row(s.alertType.name == 'alarm' ? Icons.alarm_on_rounded : Icons.notifications_none_rounded, 'Uyarı tipi', s.alertType.label),
+              row(
+                s.alertType.name == 'alarm'
+                    ? Icons.alarm_on_rounded
+                    : Icons.notifications_none_rounded,
+                'Uyarı tipi',
+                s.alertType.label,
+              ),
               PrimaryButton(
                 label: 'Ayarları düzenle',
                 outlined: true,
@@ -141,7 +212,11 @@ class HomeScreen extends ConsumerWidget {
 
 /// Sıradaki hatırlatmayı ve kalan süreyi gösterir; yarım dakikada bir yeniden hesaplar.
 class _NextReminderChip extends ConsumerStatefulWidget {
-  const _NextReminderChip({required this.settings, required this.todayTotalMl, this.lastIntakeAt});
+  const _NextReminderChip({
+    required this.settings,
+    required this.todayTotalMl,
+    this.lastIntakeAt,
+  });
 
   final WaterSettings settings;
   final int todayTotalMl;
@@ -177,26 +252,49 @@ class _NextReminderChipState extends ConsumerState<_NextReminderChip> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final goalReached = widget.todayTotalMl >= widget.settings.goalMl;
-    final next = ref.read(waterSchedulerProvider).next(widget.settings, _now, goalReachedToday: goalReached, lastIntakeAt: widget.lastIntakeAt);
+    final next = ref
+        .read(waterSchedulerProvider)
+        .next(
+          widget.settings,
+          _now,
+          goalReachedToday: goalReached,
+          lastIntakeAt: widget.lastIntakeAt,
+        );
     final String text;
     final IconData icon;
     if (next == null) {
-      text = goalReached ? 'Hedefe ulaştın, bugün hatırlatma yok' : 'Bugün için hatırlatma kalmadı';
-      icon = goalReached ? Icons.check_circle_outline_rounded : Icons.bedtime_outlined;
+      text = goalReached
+          ? 'Hedefe ulaştın, bugün hatırlatma yok'
+          : 'Bugün için hatırlatma kalmadı';
+      icon = goalReached
+          ? Icons.check_circle_outline_rounded
+          : Icons.bedtime_outlined;
     } else {
-      text = 'Sonraki hatırlatma ${fmtTime(next)} · ${fmtRelative(next, from: _now)}';
+      text =
+          'Sonraki hatırlatma ${fmtTime(next)} · ${fmtRelative(next, from: _now)}';
       icon = Icons.alarm_rounded;
     }
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(color: c.waterSoft, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(
+        color: c.waterSoft,
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
           Icon(icon, size: 18, color: c.waterDeep),
-          Text(text, style: AppText.body(context, size: 13, weight: FontWeight.w600, color: c.waterDeep)),
+          Text(
+            text,
+            style: AppText.body(
+              context,
+              size: 13,
+              weight: FontWeight.w600,
+              color: c.waterDeep,
+            ),
+          ),
         ],
       ),
     );
@@ -208,7 +306,11 @@ class _QuickAddRow extends ConsumerWidget {
 
   final WaterSettings settings;
 
-  static const _icons = [Icons.local_drink_outlined, Icons.water_drop_outlined, Icons.local_cafe_outlined];
+  static const _icons = [
+    Icons.local_drink_outlined,
+    Icons.water_drop_outlined,
+    Icons.local_cafe_outlined,
+  ];
 
   Future<void> _add(BuildContext context, WidgetRef ref, int ml) async {
     final messenger = ScaffoldMessenger.of(context);
@@ -216,16 +318,24 @@ class _QuickAddRow extends ConsumerWidget {
     final result = await notifier.addEntry(ml);
     if (result.reachedGoalNow) {
       if (!context.mounted) return;
-      await showGoalCelebration(context, goalMl: settings.goalMl, streakDays: result.streakDays);
+      await showGoalCelebration(
+        context,
+        goalMl: settings.goalMl,
+        streakDays: result.streakDays,
+      );
       return;
     }
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
         content: Text('$ml ml eklendi'),
-        persist: false, // aksiyonlu SnackBar varsayılan olarak kalıcı; 3 sn sonra kapansın
+        persist:
+            false, // aksiyonlu SnackBar varsayılan olarak kalıcı; 3 sn sonra kapansın
         duration: const Duration(seconds: 3),
-        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(result.entry.id)),
+        action: SnackBarAction(
+          label: 'Geri al',
+          onPressed: () => notifier.deleteEntry(result.entry.id),
+        ),
       ),
     );
   }
@@ -286,14 +396,25 @@ class _Tile extends StatelessWidget {
           height: 72,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: dashed ? c.waterDash : c.line, width: dashed ? 1.5 : 1),
+            border: Border.all(
+              color: dashed ? c.waterDash : c.line,
+              width: dashed ? 1.5 : 1,
+            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 6,
             children: [
               Icon(icon, size: 24, color: c.water),
-              Text(label, style: AppText.body(context, size: 13, weight: FontWeight.w600, color: labelColor)),
+              Text(
+                label,
+                style: AppText.body(
+                  context,
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: labelColor,
+                ),
+              ),
             ],
           ),
         ),

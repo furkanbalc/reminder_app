@@ -37,11 +37,13 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
   @override
   void initState() {
     super.initState();
-    _amount = widget.edit?.amountMl ?? ref.read(settingsProvider).defaultGlassMl;
+    _amount =
+        widget.edit?.amountMl ?? ref.read(settingsProvider).defaultGlassMl;
     _time = widget.edit?.timestamp ?? DateTime.now();
   }
 
-  void _step(int delta) => setState(() => _amount = (_amount + delta).clamp(50, 3000));
+  void _step(int delta) =>
+      setState(() => _amount = (_amount + delta).clamp(50, 3000));
 
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
@@ -51,7 +53,13 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     );
     if (picked == null) return;
     final now = DateTime.now();
-    var t = DateTime(_time.year, _time.month, _time.day, picked.hour, picked.minute);
+    var t = DateTime(
+      _time.year,
+      _time.month,
+      _time.day,
+      picked.hour,
+      picked.minute,
+    );
     if (t.isAfter(now)) t = now;
     setState(() => _time = t);
   }
@@ -64,7 +72,9 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     if (_isEdit) {
       await notifier.updateEntry(widget.edit!.id, amountMl: _amount, at: _time);
       navigator.pop();
-      messenger.showSnackBar(const SnackBar(content: Text('Kayıt güncellendi')));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Kayıt güncellendi')),
+      );
       return;
     }
     final result = await notifier.addEntry(_amount, at: _time);
@@ -72,7 +82,11 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     if (result.reachedGoalNow) {
       final settings = ref.read(settingsProvider);
       // ignore: use_build_context_synchronously
-      await showGoalCelebration(rootContext, goalMl: settings.goalMl, streakDays: result.streakDays);
+      await showGoalCelebration(
+        rootContext,
+        goalMl: settings.goalMl,
+        streakDays: result.streakDays,
+      );
       return;
     }
     messenger.showSnackBar(
@@ -80,7 +94,10 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
         content: Text('$_amount ml eklendi'),
         persist: false,
         duration: const Duration(seconds: 3),
-        action: SnackBarAction(label: 'Geri al', onPressed: () => notifier.deleteEntry(result.entry.id)),
+        action: SnackBarAction(
+          label: 'Geri al',
+          onPressed: () => notifier.deleteEntry(result.entry.id),
+        ),
       ),
     );
   }
@@ -90,7 +107,12 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     final c = context.colors;
     final isNow = !_isEdit && DateTime.now().difference(_time).inMinutes < 1;
     return Padding(
-      padding: EdgeInsets.fromLTRB(24, 10, 24, 24 + MediaQuery.paddingOf(context).bottom),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        10,
+        24,
+        24 + MediaQuery.paddingOf(context).bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 20,
@@ -100,7 +122,11 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
             children: [
-              CircleIconButton(icon: Icons.remove_rounded, size: 56, onTap: () => _step(-50)),
+              CircleIconButton(
+                icon: Icons.remove_rounded,
+                size: 56,
+                onTap: () => _step(-50),
+              ),
               SizedBox(
                 width: 150,
                 child: Row(
@@ -109,8 +135,24 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
                   textBaseline: TextBaseline.alphabetic,
                   spacing: 6,
                   children: [
-                    Text('$_amount', style: AppText.display(context, size: 56, height: 1, letterSpacing: -1)),
-                    Text('ml', style: AppText.display(context, size: 20, weight: FontWeight.w600, color: c.mute)),
+                    Text(
+                      '$_amount',
+                      style: AppText.display(
+                        context,
+                        size: 56,
+                        height: 1,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    Text(
+                      'ml',
+                      style: AppText.display(
+                        context,
+                        size: 20,
+                        weight: FontWeight.w600,
+                        color: c.mute,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -148,13 +190,31 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
                 children: [
                   Icon(Icons.schedule_rounded, size: 20, color: c.mute),
                   const SizedBox(width: 10),
-                  Expanded(child: Text('Zaman', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
-                  ValueTrailing(isNow ? 'Şimdi · ${fmtTime(_time)}' : (_isEdit ? '${fmtDateShort(_time)} · ${fmtTime(_time)}' : fmtTime(_time))),
+                  Expanded(
+                    child: Text(
+                      'Zaman',
+                      style: AppText.body(
+                        context,
+                        size: 15,
+                        weight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  ValueTrailing(
+                    isNow
+                        ? 'Şimdi · ${fmtTime(_time)}'
+                        : (_isEdit
+                              ? '${fmtDateShort(_time)} · ${fmtTime(_time)}'
+                              : fmtTime(_time)),
+                  ),
                 ],
               ),
             ),
           ),
-          PrimaryButton(label: _isEdit ? 'Kaydet' : '$_amount ml Ekle', onTap: _submit),
+          PrimaryButton(
+            label: _isEdit ? 'Kaydet' : '$_amount ml Ekle',
+            onTap: _submit,
+          ),
         ],
       ),
     );

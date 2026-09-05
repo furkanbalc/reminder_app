@@ -50,8 +50,15 @@ class _StatsCardState extends ConsumerState<StatsCard> {
     );
   }
 
-  Widget _header(BuildContext context, String title, int totalMl, String rightLabel, String rightValue,
-      {VoidCallback? onPrev, VoidCallback? onNext}) {
+  Widget _header(
+    BuildContext context,
+    String title,
+    int totalMl,
+    String rightLabel,
+    String rightValue, {
+    VoidCallback? onPrev,
+    VoidCallback? onNext,
+  }) {
     final c = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -66,13 +73,32 @@ class _StatsCardState extends ConsumerState<StatsCard> {
                 children: [
                   if (onPrev != null || onNext != null) ...[
                     _navButton(context, Icons.chevron_left_rounded, onPrev),
-                    Text(title, style: AppText.body(context, size: 13, weight: FontWeight.w500, color: c.mute)),
+                    Text(
+                      title,
+                      style: AppText.body(
+                        context,
+                        size: 13,
+                        weight: FontWeight.w500,
+                        color: c.mute,
+                      ),
+                    ),
                     _navButton(context, Icons.chevron_right_rounded, onNext),
                   ] else
-                    Text(title, style: AppText.body(context, size: 13, weight: FontWeight.w500, color: c.mute)),
+                    Text(
+                      title,
+                      style: AppText.body(
+                        context,
+                        size: 13,
+                        weight: FontWeight.w500,
+                        color: c.mute,
+                      ),
+                    ),
                 ],
               ),
-              Text('${fmtLiters(totalMl)} L', style: AppText.display(context, size: 24)),
+              Text(
+                '${fmtLiters(totalMl)} L',
+                style: AppText.display(context, size: 24),
+              ),
             ],
           ),
         ),
@@ -80,8 +106,23 @@ class _StatsCardState extends ConsumerState<StatsCard> {
           crossAxisAlignment: CrossAxisAlignment.end,
           spacing: 2,
           children: [
-            Text(rightLabel, style: AppText.body(context, size: 13, weight: FontWeight.w500, color: c.mute)),
-            Text(rightValue, style: AppText.display(context, size: 17, weight: FontWeight.w600)),
+            Text(
+              rightLabel,
+              style: AppText.body(
+                context,
+                size: 13,
+                weight: FontWeight.w500,
+                color: c.mute,
+              ),
+            ),
+            Text(
+              rightValue,
+              style: AppText.display(
+                context,
+                size: 17,
+                weight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ],
@@ -100,12 +141,15 @@ class _StatsCardState extends ConsumerState<StatsCard> {
     );
   }
 
-  String _avg(int totalMl, int days) => days == 0 ? '0.0 L' : '${fmtLiters(totalMl ~/ days)} L';
+  String _avg(int totalMl, int days) =>
+      days == 0 ? '0.0 L' : '${fmtLiters(totalMl ~/ days)} L';
 
   Widget _daily(BuildContext context) {
     final c = context.colors;
     final s = widget.state;
-    final pct = widget.settings.goalMl == 0 ? 0 : (s.todayTotalMl * 100 / widget.settings.goalMl).round();
+    final pct = widget.settings.goalMl == 0
+        ? 0
+        : (s.todayTotalMl * 100 / widget.settings.goalMl).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
@@ -115,10 +159,21 @@ class _StatsCardState extends ConsumerState<StatsCard> {
           Row(
             spacing: 6,
             children: [
-              Icon(Icons.local_fire_department_rounded, size: 16, color: c.amber),
+              Icon(
+                Icons.local_fire_department_rounded,
+                size: 16,
+                color: c.amber,
+              ),
               Text(
-                s.streakDays == 1 ? 'Seri başladı: 1 gün' : 'Seri: ${s.streakDays} gün üst üste hedef',
-                style: AppText.body(context, size: 13, weight: FontWeight.w600, color: c.amberDeep),
+                s.streakDays == 1
+                    ? 'Seri başladı: 1 gün'
+                    : 'Seri: ${s.streakDays} gün üst üste hedef',
+                style: AppText.body(
+                  context,
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: c.amberDeep,
+                ),
               ),
             ],
           ),
@@ -126,7 +181,10 @@ class _StatsCardState extends ConsumerState<StatsCard> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
-              child: Text('Bugün henüz su kaydı yok', style: AppText.body(context, size: 14, color: c.mute)),
+              child: Text(
+                'Bugün henüz su kaydı yok',
+                style: AppText.body(context, size: 14, color: c.mute),
+              ),
             ),
           )
         else
@@ -143,19 +201,30 @@ class _StatsCardState extends ConsumerState<StatsCard> {
       onTap: () => showAddWaterSheet(context, edit: e),
       child: Container(
         height: 46,
-        decoration: BoxDecoration(border: Border(top: BorderSide(color: c.line))),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: c.line)),
+        ),
         child: Row(
           spacing: 12,
           children: [
             Icon(Icons.water_drop_outlined, size: 18, color: c.water),
             SizedBox(
               width: 48,
-              child: Text(fmtTime(e.timestamp), style: AppText.body(context, size: 14, weight: FontWeight.w600)),
+              child: Text(
+                fmtTime(e.timestamp),
+                style: AppText.body(context, size: 14, weight: FontWeight.w600),
+              ),
             ),
-            Expanded(child: Text('${e.amountMl} ml', style: AppText.body(context, size: 14, color: c.mute))),
+            Expanded(
+              child: Text(
+                '${e.amountMl} ml',
+                style: AppText.body(context, size: 14, color: c.mute),
+              ),
+            ),
             Icon(Icons.edit_outlined, size: 16, color: c.line),
             IconButton(
-              onPressed: () => ref.read(waterProvider.notifier).deleteEntry(e.id),
+              onPressed: () =>
+                  ref.read(waterProvider.notifier).deleteEntry(e.id),
               icon: Icon(Icons.close_rounded, size: 18, color: c.mute),
               visualDensity: VisualDensity.compact,
               tooltip: 'Sil',
@@ -168,7 +237,8 @@ class _StatsCardState extends ConsumerState<StatsCard> {
 
   Widget _period(BuildContext context, {required bool isWeek}) {
     final offset = isWeek ? _weekOffset : _monthOffset;
-    void setOffset(int v) => setState(() => isWeek ? _weekOffset = v : _monthOffset = v);
+    void setOffset(int v) =>
+        setState(() => isWeek ? _weekOffset = v : _monthOffset = v);
 
     if (offset == 0) {
       final s = widget.state;
@@ -181,10 +251,15 @@ class _StatsCardState extends ConsumerState<StatsCard> {
         onNext: null,
       );
     }
-    final async = ref.watch(periodStatsProvider(PeriodKey(isWeek: isWeek, offset: offset)));
+    final async = ref.watch(
+      periodStatsProvider(PeriodKey(isWeek: isWeek, offset: offset)),
+    );
     final stats = async.value;
     if (stats == null) {
-      return const SizedBox(height: 180, child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+      return const SizedBox(
+        height: 180,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
     }
     return _periodBody(
       context,
@@ -218,13 +293,23 @@ class _StatsCardState extends ConsumerState<StatsCard> {
   }) {
     const labels = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
     final now = DateTime.now();
-    final total = days.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
+    final total = days
+        .where((d) => d.totalMl >= 0)
+        .fold(0, (a, d) => a + d.totalMl);
     final elapsed = days.where((d) => d.totalMl >= 0).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 14,
       children: [
-        _header(context, title, total, 'Günlük ortalama', _avg(total, elapsed), onPrev: onPrev, onNext: onNext),
+        _header(
+          context,
+          title,
+          total,
+          'Günlük ortalama',
+          _avg(total, elapsed),
+          onPrev: onPrev,
+          onNext: onNext,
+        ),
         WaterBarChart(
           goalMl: widget.settings.goalMl,
           dense: !isWeek,
@@ -234,7 +319,8 @@ class _StatsCardState extends ConsumerState<StatsCard> {
                 label: isWeek ? labels[i] : '${days[i].day.day}',
                 valueMl: days[i].totalMl < 0 ? null : days[i].totalMl,
                 isToday: isSameDay(days[i].day, now),
-                showLabel: isWeek || days[i].day.day == 1 || days[i].day.day % 5 == 0,
+                showLabel:
+                    isWeek || days[i].day.day == 1 || days[i].day.day % 5 == 0,
               ),
           ],
         ),

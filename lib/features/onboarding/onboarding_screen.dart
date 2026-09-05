@@ -43,13 +43,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _next() {
     if (_page < _pageCount - 1) {
-      _controller.nextPage(duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
   void _back() {
     if (_page > 0) {
-      _controller.previousPage(duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
+      _controller.previousPage(
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
@@ -66,7 +72,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     }
     // onboardingDone ile ana ekrana geçilir; hatırlatmalar orada kurulur.
-    await ref.read(settingsProvider.notifier).saveQuiet(_s.copyWith(onboardingDone: true));
+    await ref
+        .read(settingsProvider.notifier)
+        .saveQuiet(_s.copyWith(onboardingDone: true));
   }
 
   @override
@@ -84,7 +92,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     width: 44,
                     height: 44,
                     child: _page > 0
-                        ? IconButton(onPressed: _back, icon: const Icon(Icons.chevron_left_rounded, size: 28))
+                        ? IconButton(
+                            onPressed: _back,
+                            icon: const Icon(
+                              Icons.chevron_left_rounded,
+                              size: 28,
+                            ),
+                          )
                         : null,
                   ),
                   const Spacer(),
@@ -126,7 +140,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  Widget _frame(BuildContext context, {required String title, required String text, required Widget body, required Widget action}) {
+  Widget _frame(
+    BuildContext context, {
+    required String title,
+    required String text,
+    required Widget body,
+    required Widget action,
+  }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
       child: Column(
@@ -140,7 +160,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   const SizedBox(height: 8),
                   Text(title, style: AppText.display(context, size: 30)),
-                  Text(text, style: AppText.body(context, size: 15, color: context.colors.mute)),
+                  Text(
+                    text,
+                    style: AppText.body(
+                      context,
+                      size: 15,
+                      color: context.colors.mute,
+                    ),
+                  ),
                   body,
                 ],
               ),
@@ -158,7 +185,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _frame(
       context,
       title: 'Su içmeyi unutma',
-      text: 'Gün boyu düzenli hatırlatır, ne kadar içtiğini takip eder. İstersen unutmaman gereken notlarını da zamanında haber verir.',
+      text:
+          'Gün boyu düzenli hatırlatır, ne kadar içtiğini takip eder. İstersen unutmaman gereken notlarını da zamanında haber verir.',
       body: Center(
         child: Padding(
           padding: const EdgeInsets.only(top: 24),
@@ -178,7 +206,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return _frame(
       context,
       title: 'Günlük hedefin',
-      text: 'Çoğu yetişkin için günde 2 ile 3 litre iyi bir başlangıç. İstediğin zaman değiştirebilirsin.',
+      text:
+          'Çoğu yetişkin için günde 2 ile 3 litre iyi bir başlangıç. İstediğin zaman değiştirebilirsin.',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
@@ -186,23 +215,47 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           AppCard(
             child: Row(
               children: [
-                Expanded(child: Text('Günlük hedef', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
+                Expanded(
+                  child: Text(
+                    'Günlük hedef',
+                    style: AppText.body(
+                      context,
+                      size: 15,
+                      weight: FontWeight.w500,
+                    ),
+                  ),
+                ),
                 Row(
                   spacing: 10,
                   children: [
                     CircleIconButton(
                       icon: Icons.remove_rounded,
                       size: 36,
-                      onTap: _s.goalMl > 1000 ? () => setState(() => _s = _s.copyWith(goalMl: _s.goalMl - 100)) : null,
+                      onTap: _s.goalMl > 1000
+                          ? () => setState(
+                              () => _s = _s.copyWith(goalMl: _s.goalMl - 100),
+                            )
+                          : null,
                     ),
-                    SizedBox(width: 60, child: Text('${fmtLiters(_s.goalMl)} L', textAlign: TextAlign.center, style: AppText.display(context, size: 20))),
+                    SizedBox(
+                      width: 60,
+                      child: Text(
+                        '${fmtLiters(_s.goalMl)} L',
+                        textAlign: TextAlign.center,
+                        style: AppText.display(context, size: 20),
+                      ),
+                    ),
                     CircleIconButton(
                       icon: Icons.add_rounded,
                       size: 36,
                       color: c.waterSoft,
                       iconColor: c.waterDeep,
                       bordered: false,
-                      onTap: _s.goalMl < 6000 ? () => setState(() => _s = _s.copyWith(goalMl: _s.goalMl + 100)) : null,
+                      onTap: _s.goalMl < 6000
+                          ? () => setState(
+                              () => _s = _s.copyWith(goalMl: _s.goalMl + 100),
+                            )
+                          : null,
                     ),
                   ],
                 ),
@@ -233,17 +286,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final c = context.colors;
     Future<void> pick(bool start) async {
       final current = start ? _s.activeStartMin : _s.activeEndMin;
-      final t = await pickTime(context, TimeOfDay(hour: current ~/ 60, minute: current % 60),
-          help: start ? 'Uyanma saati' : 'Yatma saati');
+      final t = await pickTime(
+        context,
+        TimeOfDay(hour: current ~/ 60, minute: current % 60),
+        help: start ? 'Uyanma saati' : 'Yatma saati',
+      );
       if (t == null) return;
       final m = t.hour * 60 + t.minute;
-      setState(() => _s = start ? _s.copyWith(activeStartMin: m) : _s.copyWith(activeEndMin: m));
+      setState(
+        () => _s = start
+            ? _s.copyWith(activeStartMin: m)
+            : _s.copyWith(activeEndMin: m),
+      );
     }
 
     return _frame(
       context,
       title: 'Saatler ve bardak',
-      text: 'Hatırlatmalar yalnızca uyanık olduğun saatlerde gelir. Hızlı eklemede varsayılan bardağını seç.',
+      text:
+          'Hatırlatmalar yalnızca uyanık olduğun saatlerde gelir. Hızlı eklemede varsayılan bardağını seç.',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 18,
@@ -251,12 +312,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Row(
             spacing: 10,
             children: [
-              Expanded(child: _tile(context, Icons.wb_sunny_outlined, 'Uyanma', fmtMinutesOfDay(_s.activeStartMin), () => pick(true))),
-              Expanded(child: _tile(context, Icons.bedtime_outlined, 'Yatma', fmtMinutesOfDay(_s.activeEndMin), () => pick(false))),
+              Expanded(
+                child: _tile(
+                  context,
+                  Icons.wb_sunny_outlined,
+                  'Uyanma',
+                  fmtMinutesOfDay(_s.activeStartMin),
+                  () => pick(true),
+                ),
+              ),
+              Expanded(
+                child: _tile(
+                  context,
+                  Icons.bedtime_outlined,
+                  'Yatma',
+                  fmtMinutesOfDay(_s.activeEndMin),
+                  () => pick(false),
+                ),
+              ),
             ],
           ),
           if (_s.activeEndMin <= _s.activeStartMin)
-            Text('Yatma saati uyanma saatinden sonra olmalı', style: AppText.body(context, size: 12, color: c.danger)),
+            Text(
+              'Yatma saati uyanma saatinden sonra olmalı',
+              style: AppText.body(context, size: 12, color: c.danger),
+            ),
           const SectionLabel('Varsayılan bardak'),
           Wrap(
             spacing: 8,
@@ -268,17 +348,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   selected: _s.defaultGlassMl == g,
                   selectedColor: c.waterDeep,
                   selectedTextColor: Colors.white,
-                  onTap: () => setState(() => _s = _s.copyWith(defaultGlassMl: g)),
+                  onTap: () =>
+                      setState(() => _s = _s.copyWith(defaultGlassMl: g)),
                 ),
             ],
           ),
         ],
       ),
-      action: PrimaryButton(label: 'Devam', onTap: _s.activeEndMin > _s.activeStartMin ? _next : null),
+      action: PrimaryButton(
+        label: 'Devam',
+        onTap: _s.activeEndMin > _s.activeStartMin ? _next : null,
+      ),
     );
   }
 
-  Widget _tile(BuildContext context, IconData icon, String label, String value, VoidCallback onTap) {
+  Widget _tile(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    VoidCallback onTap,
+  ) {
     final c = context.colors;
     return AppCard(
       radius: 16,
@@ -315,25 +405,34 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Row(
                 spacing: 14,
                 children: [
-                  Icon(
-                    switch (t) {
-                      AlertType.notification => Icons.notifications_none_rounded,
-                      AlertType.alarm => Icons.alarm_rounded,
-                      AlertType.escalating => Icons.notifications_active_outlined,
-                    },
-                    color: _s.alertType == t ? c.waterDeep : c.mute,
-                  ),
+                  Icon(switch (t) {
+                    AlertType.notification => Icons.notifications_none_rounded,
+                    AlertType.alarm => Icons.alarm_rounded,
+                    AlertType.escalating => Icons.notifications_active_outlined,
+                  }, color: _s.alertType == t ? c.waterDeep : c.mute),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 2,
                       children: [
-                        Text(t.label, style: AppText.body(context, size: 15, weight: FontWeight.w600, color: _s.alertType == t ? c.waterDeep : c.ink)),
-                        Text(t.description, style: AppText.body(context, size: 12, color: c.mute)),
+                        Text(
+                          t.label,
+                          style: AppText.body(
+                            context,
+                            size: 15,
+                            weight: FontWeight.w600,
+                            color: _s.alertType == t ? c.waterDeep : c.ink,
+                          ),
+                        ),
+                        Text(
+                          t.description,
+                          style: AppText.body(context, size: 12, color: c.mute),
+                        ),
                       ],
                     ),
                   ),
-                  if (_s.alertType == t) Icon(Icons.check_circle_rounded, color: c.water),
+                  if (_s.alertType == t)
+                    Icon(Icons.check_circle_rounded, color: c.water),
                 ],
               ),
             ),
@@ -354,27 +453,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _permissions(BuildContext context) {
     final c = context.colors;
     Widget item(IconData icon, String title, String text) => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 14,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(color: c.waterSoft, borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, size: 22, color: c.waterDeep),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 2,
-                children: [
-                  Text(title, style: AppText.body(context, size: 15, weight: FontWeight.w600)),
-                  Text(text, style: AppText.body(context, size: 13, color: c.mute)),
-                ],
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 14,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: c.waterSoft,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 22, color: c.waterDeep),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 2,
+            children: [
+              Text(
+                title,
+                style: AppText.body(context, size: 15, weight: FontWeight.w600),
               ),
-            ),
-          ],
-        );
+              Text(text, style: AppText.body(context, size: 13, color: c.mute)),
+            ],
+          ),
+        ),
+      ],
+    );
     return _frame(
       context,
       title: 'Birkaç izin',
@@ -383,15 +488,34 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 18,
         children: [
-          item(Icons.notifications_none_rounded, 'Bildirimler', 'Su ve not hatırlatmaları bildirim olarak gelir.'),
+          item(
+            Icons.notifications_none_rounded,
+            'Bildirimler',
+            'Su ve not hatırlatmaları bildirim olarak gelir.',
+          ),
           if (Platform.isAndroid)
-            item(Icons.schedule_rounded, 'Tam zamanlı alarm', 'Hatırlatmaların dakikası dakikasına gelmesi için.'),
+            item(
+              Icons.schedule_rounded,
+              'Tam zamanlı alarm',
+              'Hatırlatmaların dakikası dakikasına gelmesi için.',
+            ),
           if (Platform.isIOS && _s.alertType.usesAlarm)
-            item(Icons.alarm_rounded, 'Sistem alarmı', 'Alarm, uygulama kapalıyken ve sessiz moddayken de çalar.'),
-          item(Icons.lock_outline_rounded, 'Verilerin sende kalır', 'Tüm kayıtlar yalnızca bu cihazda saklanır.'),
+            item(
+              Icons.alarm_rounded,
+              'Sistem alarmı',
+              'Alarm, uygulama kapalıyken ve sessiz moddayken de çalar.',
+            ),
+          item(
+            Icons.lock_outline_rounded,
+            'Verilerin sende kalır',
+            'Tüm kayıtlar yalnızca bu cihazda saklanır.',
+          ),
         ],
       ),
-      action: PrimaryButton(label: _busy ? 'Hazırlanıyor…' : 'İzin ver ve başla', onTap: _busy ? null : _finish),
+      action: PrimaryButton(
+        label: _busy ? 'Hazırlanıyor…' : 'İzin ver ve başla',
+        onTap: _busy ? null : _finish,
+      ),
     );
   }
 }

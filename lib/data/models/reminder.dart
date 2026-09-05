@@ -21,6 +21,7 @@ class Reminder {
   final AlarmSound sound;
   final bool enabled;
   final DateTime createdAt;
+
   /// Zamanından kaç dakika önce ön bildirim gelsin (0: yok)
   final int preAlertMin;
 
@@ -52,53 +53,55 @@ class Reminder {
   }
 
   Map<String, Object?> toMap() => {
-        if (id != newId) 'id': id,
-        'title': title,
-        'date_time': dateTime.millisecondsSinceEpoch,
-        'repeat': repeat.name,
-        'alert_type': alertType.name,
-        'sound': sound.name,
-        'enabled': enabled ? 1 : 0,
-        'created_at': createdAt.millisecondsSinceEpoch,
-        'pre_alert_min': preAlertMin,
-      };
+    if (id != newId) 'id': id,
+    'title': title,
+    'date_time': dateTime.millisecondsSinceEpoch,
+    'repeat': repeat.name,
+    'alert_type': alertType.name,
+    'sound': sound.name,
+    'enabled': enabled ? 1 : 0,
+    'created_at': createdAt.millisecondsSinceEpoch,
+    'pre_alert_min': preAlertMin,
+  };
 
   factory Reminder.fromMap(Map<String, Object?> m) => Reminder(
-        id: m['id'] as int,
-        title: m['title'] as String,
-        dateTime: DateTime.fromMillisecondsSinceEpoch(m['date_time'] as int),
-        repeat: RepeatRule.fromName(m['repeat'] as String?),
-        alertType: AlertType.fromName(m['alert_type'] as String?),
-        sound: AlarmSound.fromName(m['sound'] as String?),
-        enabled: (m['enabled'] as int? ?? 1) == 1,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
-        preAlertMin: (m['pre_alert_min'] as int?) ?? 0,
-      );
+    id: m['id'] as int,
+    title: m['title'] as String,
+    dateTime: DateTime.fromMillisecondsSinceEpoch(m['date_time'] as int),
+    repeat: RepeatRule.fromName(m['repeat'] as String?),
+    alertType: AlertType.fromName(m['alert_type'] as String?),
+    sound: AlarmSound.fromName(m['sound'] as String?),
+    enabled: (m['enabled'] as int? ?? 1) == 1,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
+    preAlertMin: (m['pre_alert_min'] as int?) ?? 0,
+  );
 
   /// Dışa aktarma için.
   Map<String, Object?> toJson() => {
-        'id': id,
-        'title': title,
-        'dateTime': dateTime.toIso8601String(),
-        'repeat': repeat.name,
-        'alertType': alertType.name,
-        'sound': sound.name,
-        'enabled': enabled,
-        'createdAt': createdAt.toIso8601String(),
-        'preAlertMin': preAlertMin,
-      };
+    'id': id,
+    'title': title,
+    'dateTime': dateTime.toIso8601String(),
+    'repeat': repeat.name,
+    'alertType': alertType.name,
+    'sound': sound.name,
+    'enabled': enabled,
+    'createdAt': createdAt.toIso8601String(),
+    'preAlertMin': preAlertMin,
+  };
 
   factory Reminder.fromJson(Map<String, Object?> j) => Reminder(
-        id: newId,
-        title: j['title'] as String? ?? '',
-        dateTime: DateTime.tryParse(j['dateTime'] as String? ?? '') ?? DateTime.now(),
-        repeat: RepeatRule.fromName(j['repeat'] as String?),
-        alertType: AlertType.fromName(j['alertType'] as String?),
-        sound: AlarmSound.fromName(j['sound'] as String?),
-        enabled: j['enabled'] as bool? ?? true,
-        createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
-        preAlertMin: (j['preAlertMin'] as num?)?.toInt() ?? 0,
-      );
+    id: newId,
+    title: j['title'] as String? ?? '',
+    dateTime:
+        DateTime.tryParse(j['dateTime'] as String? ?? '') ?? DateTime.now(),
+    repeat: RepeatRule.fromName(j['repeat'] as String?),
+    alertType: AlertType.fromName(j['alertType'] as String?),
+    sound: AlarmSound.fromName(j['sound'] as String?),
+    enabled: j['enabled'] as bool? ?? true,
+    createdAt:
+        DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
+    preAlertMin: (j['preAlertMin'] as num?)?.toInt() ?? 0,
+  );
 
   /// [from] anından sonraki ilk çalma zamanı. Yoksa null (geçmiş tek seferlik).
   DateTime? nextOccurrence(DateTime from) {
@@ -133,7 +136,13 @@ class Reminder {
           final month = DateTime(from.year, from.month + i, 1);
           final lastDay = DateTime(month.year, month.month + 1, 0).day;
           final day = dateTime.day > lastDay ? lastDay : dateTime.day;
-          final t = DateTime(month.year, month.month, day, dateTime.hour, dateTime.minute);
+          final t = DateTime(
+            month.year,
+            month.month,
+            day,
+            dateTime.hour,
+            dateTime.minute,
+          );
           if (t.isAfter(from)) return t;
         }
         return null;

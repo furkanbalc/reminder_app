@@ -23,35 +23,61 @@ import '../services/water_scheduler.dart';
 import '../services/widget_service.dart';
 
 // ---- main() içinde override edilen altyapı sağlayıcıları ----
-final sharedPreferencesProvider =
-    Provider<SharedPreferences>((_) => throw UnimplementedError('main içinde override edilir'));
-final databaseProvider = Provider<Database>((_) => throw UnimplementedError('main içinde override edilir'));
-final notificationServiceProvider =
-    Provider<NotificationService>((_) => throw UnimplementedError('main içinde override edilir'));
+final sharedPreferencesProvider = Provider<SharedPreferences>(
+  (_) => throw UnimplementedError('main içinde override edilir'),
+);
+final databaseProvider = Provider<Database>(
+  (_) => throw UnimplementedError('main içinde override edilir'),
+);
+final notificationServiceProvider = Provider<NotificationService>(
+  (_) => throw UnimplementedError('main içinde override edilir'),
+);
 
-final alarmKitServiceProvider = Provider<AlarmKitService>((_) => AlarmKitService());
+final alarmKitServiceProvider = Provider<AlarmKitService>(
+  (_) => AlarmKitService(),
+);
 final alarmServiceProvider = Provider<AlarmService>(
-  (ref) => AlarmService(ref.watch(sharedPreferencesProvider), ref.watch(alarmKitServiceProvider)),
+  (ref) => AlarmService(
+    ref.watch(sharedPreferencesProvider),
+    ref.watch(alarmKitServiceProvider),
+  ),
 );
 final healthServiceProvider = Provider<HealthService>((_) => HealthService());
 final widgetServiceProvider = Provider<WidgetService>((_) => WidgetService());
 
-final waterRepositoryProvider = Provider((ref) => WaterRepository(ref.watch(databaseProvider)));
-final reminderRepositoryProvider = Provider((ref) => ReminderRepository(ref.watch(databaseProvider)));
-final settingsRepositoryProvider = Provider((ref) => SettingsRepository(ref.watch(sharedPreferencesProvider)));
+final waterRepositoryProvider = Provider(
+  (ref) => WaterRepository(ref.watch(databaseProvider)),
+);
+final reminderRepositoryProvider = Provider(
+  (ref) => ReminderRepository(ref.watch(databaseProvider)),
+);
+final settingsRepositoryProvider = Provider(
+  (ref) => SettingsRepository(ref.watch(sharedPreferencesProvider)),
+);
 final backupServiceProvider = Provider(
-  (ref) => BackupService(ref.watch(waterRepositoryProvider), ref.watch(reminderRepositoryProvider)),
+  (ref) => BackupService(
+    ref.watch(waterRepositoryProvider),
+    ref.watch(reminderRepositoryProvider),
+  ),
 );
 
 final waterSchedulerProvider = Provider(
-  (ref) => WaterScheduler(ref.watch(notificationServiceProvider), ref.watch(alarmServiceProvider)),
+  (ref) => WaterScheduler(
+    ref.watch(notificationServiceProvider),
+    ref.watch(alarmServiceProvider),
+  ),
 );
 final reminderSchedulerProvider = Provider(
-  (ref) => ReminderScheduler(ref.watch(notificationServiceProvider), ref.watch(alarmServiceProvider)),
+  (ref) => ReminderScheduler(
+    ref.watch(notificationServiceProvider),
+    ref.watch(alarmServiceProvider),
+  ),
 );
 
 // ---- Sekme ----
-final tabIndexProvider = NotifierProvider<TabIndexNotifier, int>(TabIndexNotifier.new);
+final tabIndexProvider = NotifierProvider<TabIndexNotifier, int>(
+  TabIndexNotifier.new,
+);
 
 class TabIndexNotifier extends Notifier<int> {
   @override
@@ -61,7 +87,9 @@ class TabIndexNotifier extends Notifier<int> {
 }
 
 // ---- Ayarlar ----
-final settingsProvider = NotifierProvider<SettingsNotifier, WaterSettings>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, WaterSettings>(
+  SettingsNotifier.new,
+);
 
 class SettingsNotifier extends Notifier<WaterSettings> {
   @override
@@ -73,7 +101,9 @@ class SettingsNotifier extends Notifier<WaterSettings> {
     state = s;
     await ref.read(settingsRepositoryProvider).save(s);
     if (alarmTypeChanged) {
-      await ref.read(alarmServiceProvider).configureSystemAlarm(s.useSystemAlarm);
+      await ref
+          .read(alarmServiceProvider)
+          .configureSystemAlarm(s.useSystemAlarm);
     }
     await ref.read(waterProvider.notifier).rescheduleReminders();
     if (alarmTypeChanged) await ref.read(remindersProvider.notifier).syncAll();
@@ -100,30 +130,42 @@ class WaterState {
 
   final int todayTotalMl;
   final List<WaterEntry> todayEntries;
+
   /// Pazartesiden pazara 7 gün. Gelecek günler için totalMl = -1.
   final List<DayTotal> week;
+
   /// Ayın her günü. Gelecek günler için totalMl = -1.
   final List<DayTotal> month;
   final DateTime? nextReminder;
   final DateTime? lastIntakeAt;
+
   /// Üst üste hedefe ulaşılan gün sayısı (bugün dahil veya dünle biten).
   final int streakDays;
 
-  int get weekTotalMl => week.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
-  int get monthTotalMl => month.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
+  int get weekTotalMl =>
+      week.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
+  int get monthTotalMl =>
+      month.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
   int get weekDaysElapsed => week.where((d) => d.totalMl >= 0).length;
   int get monthDaysElapsed => month.where((d) => d.totalMl >= 0).length;
 }
 
 class AddResult {
-  const AddResult({required this.entry, required this.reachedGoalNow, required this.streakDays});
+  const AddResult({
+    required this.entry,
+    required this.reachedGoalNow,
+    required this.streakDays,
+  });
   final WaterEntry entry;
+
   /// Bu kayıtla günlük hedef ilk kez aşıldı mı?
   final bool reachedGoalNow;
   final int streakDays;
 }
 
-final waterProvider = AsyncNotifierProvider<WaterNotifier, WaterState>(WaterNotifier.new);
+final waterProvider = AsyncNotifierProvider<WaterNotifier, WaterState>(
+  WaterNotifier.new,
+);
 
 class WaterNotifier extends AsyncNotifier<WaterState> {
   WaterRepository get _repo => ref.read(waterRepositoryProvider);
@@ -141,7 +183,11 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final monthStart = DateTime(now.year, now.month, 1);
     final streakStart = today.subtract(const Duration(days: 60));
-    final rangeStart = [weekStart, monthStart, streakStart].reduce((a, b) => a.isBefore(b) ? a : b);
+    final rangeStart = [
+      weekStart,
+      monthStart,
+      streakStart,
+    ].reduce((a, b) => a.isBefore(b) ? a : b);
 
     final entries = await _repo.entriesBetween(rangeStart, tomorrow);
     final totals = <DateTime, int>{};
@@ -154,19 +200,35 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
 
     final week = [
       for (var i = 0; i < 7; i++)
-        DayTotal(day: weekStart.add(Duration(days: i)), totalMl: totalFor(weekStart.add(Duration(days: i)))),
+        DayTotal(
+          day: weekStart.add(Duration(days: i)),
+          totalMl: totalFor(weekStart.add(Duration(days: i))),
+        ),
     ];
     final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
     final month = [
       for (var i = 0; i < daysInMonth; i++)
-        DayTotal(day: monthStart.add(Duration(days: i)), totalMl: totalFor(monthStart.add(Duration(days: i)))),
+        DayTotal(
+          day: monthStart.add(Duration(days: i)),
+          totalMl: totalFor(monthStart.add(Duration(days: i))),
+        ),
     ];
-    final todayEntries = entries.where((e) => isSameDay(e.timestamp, now)).toList().reversed.toList();
+    final todayEntries = entries
+        .where((e) => isSameDay(e.timestamp, now))
+        .toList()
+        .reversed
+        .toList();
     final todayTotal = totals[today] ?? 0;
     final lastIntake = entries.isEmpty ? null : entries.last.timestamp;
     final streak = _streak(totals, today, s.goalMl);
-    final next = ref.read(waterSchedulerProvider).next(
-          s, now, goalReachedToday: todayTotal >= s.goalMl, lastIntakeAt: lastIntake);
+    final next = ref
+        .read(waterSchedulerProvider)
+        .next(
+          s,
+          now,
+          goalReachedToday: todayTotal >= s.goalMl,
+          lastIntakeAt: lastIntake,
+        );
 
     return WaterState(
       todayTotalMl: todayTotal,
@@ -180,7 +242,9 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   }
 
   static int _streak(Map<DateTime, int> totals, DateTime today, int goalMl) {
-    var day = (totals[today] ?? 0) >= goalMl ? today : today.subtract(const Duration(days: 1));
+    var day = (totals[today] ?? 0) >= goalMl
+        ? today
+        : today.subtract(const Duration(days: 1));
     var count = 0;
     while ((totals[day] ?? 0) >= goalMl && count < 365) {
       count++;
@@ -194,13 +258,25 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final before = state.value?.todayTotalMl ?? 0;
     final when = at ?? DateTime.now();
     final entry = await _repo.add(amountMl, when);
-    if (s.healthSync) await ref.read(healthServiceProvider).writeWater(amountMl, when);
+    if (s.healthSync)
+      await ref.read(healthServiceProvider).writeWater(amountMl, when);
     final st = await _refreshAndReschedule();
-    final reached = isSameDay(when, DateTime.now()) && before < s.goalMl && st.todayTotalMl >= s.goalMl;
-    return AddResult(entry: entry, reachedGoalNow: reached, streakDays: st.streakDays);
+    final reached =
+        isSameDay(when, DateTime.now()) &&
+        before < s.goalMl &&
+        st.todayTotalMl >= s.goalMl;
+    return AddResult(
+      entry: entry,
+      reachedGoalNow: reached,
+      streakDays: st.streakDays,
+    );
   }
 
-  Future<void> updateEntry(int id, {required int amountMl, required DateTime at}) async {
+  Future<void> updateEntry(
+    int id, {
+    required int amountMl,
+    required DateTime at,
+  }) async {
     final s = ref.read(settingsProvider);
     final old = await _repo.byId(id);
     await _repo.update(id, amountMl: amountMl, at: at);
@@ -216,7 +292,8 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final s = ref.read(settingsProvider);
     final old = await _repo.byId(id);
     await _repo.delete(id);
-    if (s.healthSync && old != null) await ref.read(healthServiceProvider).deleteWater(old.timestamp);
+    if (s.healthSync && old != null)
+      await ref.read(healthServiceProvider).deleteWater(old.timestamp);
     await _refreshAndReschedule();
   }
 
@@ -227,7 +304,9 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     await _pushWidget(st, s);
   }
 
-  Future<void> _pushWidget(WaterState st, WaterSettings s) => ref.read(widgetServiceProvider).push(
+  Future<void> _pushWidget(WaterState st, WaterSettings s) => ref
+      .read(widgetServiceProvider)
+      .push(
         totalMl: st.todayTotalMl,
         goalMl: s.goalMl,
         glassMl: s.defaultGlassMl,
@@ -263,7 +342,9 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
         final s = ref.read(settingsProvider);
         final st = state.value;
         if (st == null) break;
-        await ref.read(waterSchedulerProvider).reschedule(
+        await ref
+            .read(waterSchedulerProvider)
+            .reschedule(
               s: s,
               todayTotalMl: st.todayTotalMl,
               lastIntakeAt: st.lastIntakeAt,
@@ -290,52 +371,65 @@ class PeriodKey {
   final int offset;
 
   @override
-  bool operator ==(Object other) => other is PeriodKey && other.isWeek == isWeek && other.offset == offset;
+  bool operator ==(Object other) =>
+      other is PeriodKey && other.isWeek == isWeek && other.offset == offset;
 
   @override
   int get hashCode => Object.hash(isWeek, offset);
 }
 
 class PeriodStats {
-  const PeriodStats({required this.start, required this.end, required this.days});
+  const PeriodStats({
+    required this.start,
+    required this.end,
+    required this.days,
+  });
   final DateTime start;
+
   /// hariç
   final DateTime end;
   final List<DayTotal> days;
-  int get totalMl => days.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
+  int get totalMl =>
+      days.where((d) => d.totalMl >= 0).fold(0, (a, d) => a + d.totalMl);
   int get daysElapsed => days.where((d) => d.totalMl >= 0).length;
 }
 
-final periodStatsProvider = FutureProvider.autoDispose.family<PeriodStats, PeriodKey>((ref, key) async {
-  ref.watch(waterProvider); // kayıt değişince yenile
-  final repo = ref.read(waterRepositoryProvider);
-  final now = DateTime.now();
-  final today = startOfDay(now);
-  late DateTime start;
-  late DateTime end;
-  if (key.isWeek) {
-    final thisWeek = today.subtract(Duration(days: today.weekday - 1));
-    start = thisWeek.add(Duration(days: 7 * key.offset));
-    end = start.add(const Duration(days: 7));
-  } else {
-    start = DateTime(now.year, now.month + key.offset, 1);
-    end = DateTime(start.year, start.month + 1, 1);
-  }
-  final entries = await repo.entriesBetween(start, end);
-  final totals = <DateTime, int>{};
-  for (final e in entries) {
-    final d = startOfDay(e.timestamp);
-    totals[d] = (totals[d] ?? 0) + e.amountMl;
-  }
-  final days = <DayTotal>[];
-  for (var d = start; d.isBefore(end); d = d.add(const Duration(days: 1))) {
-    days.add(DayTotal(day: d, totalMl: d.isAfter(today) ? -1 : (totals[d] ?? 0)));
-  }
-  return PeriodStats(start: start, end: end, days: days);
-});
+final periodStatsProvider = FutureProvider.autoDispose
+    .family<PeriodStats, PeriodKey>((ref, key) async {
+      ref.watch(waterProvider); // kayıt değişince yenile
+      final repo = ref.read(waterRepositoryProvider);
+      final now = DateTime.now();
+      final today = startOfDay(now);
+      late DateTime start;
+      late DateTime end;
+      if (key.isWeek) {
+        final thisWeek = today.subtract(Duration(days: today.weekday - 1));
+        start = thisWeek.add(Duration(days: 7 * key.offset));
+        end = start.add(const Duration(days: 7));
+      } else {
+        start = DateTime(now.year, now.month + key.offset, 1);
+        end = DateTime(start.year, start.month + 1, 1);
+      }
+      final entries = await repo.entriesBetween(start, end);
+      final totals = <DateTime, int>{};
+      for (final e in entries) {
+        final d = startOfDay(e.timestamp);
+        totals[d] = (totals[d] ?? 0) + e.amountMl;
+      }
+      final days = <DayTotal>[];
+      for (var d = start; d.isBefore(end); d = d.add(const Duration(days: 1))) {
+        days.add(
+          DayTotal(day: d, totalMl: d.isAfter(today) ? -1 : (totals[d] ?? 0)),
+        );
+      }
+      return PeriodStats(start: start, end: end, days: days);
+    });
 
 // ---- Hatırlatıcılar ----
-final remindersProvider = AsyncNotifierProvider<RemindersNotifier, List<Reminder>>(RemindersNotifier.new);
+final remindersProvider =
+    AsyncNotifierProvider<RemindersNotifier, List<Reminder>>(
+      RemindersNotifier.new,
+    );
 
 class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
   ReminderRepository get _repo => ref.read(reminderRepositoryProvider);
@@ -349,7 +443,9 @@ class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
     // Zamanı geçmiş tek seferlik hatırlatıcılar kapanır.
     var changed = false;
     for (final r in list) {
-      if (r.enabled && r.repeat == RepeatRule.none && !r.dateTime.isAfter(now)) {
+      if (r.enabled &&
+          r.repeat == RepeatRule.none &&
+          !r.dateTime.isAfter(now)) {
         await _repo.update(r.copyWith(enabled: false));
         changed = true;
       }
@@ -378,7 +474,8 @@ class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
     await _reload();
   }
 
-  Future<void> toggle(Reminder r, bool enabled) => edit(r.copyWith(enabled: enabled));
+  Future<void> toggle(Reminder r, bool enabled) =>
+      edit(r.copyWith(enabled: enabled));
 
   /// Uygulama açılışında tüm hatırlatıcıları sistemde yeniden kurar.
   Future<void> syncAll() async {

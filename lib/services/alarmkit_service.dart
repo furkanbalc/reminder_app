@@ -27,7 +27,8 @@ class AlarmKitService {
   Future<bool> isAuthorized() async {
     if (!await isSupported()) return false;
     try {
-      return await _kit.getAuthorizationState() == AlarmAuthorizationState.authorized;
+      return await _kit.getAuthorizationState() ==
+          AlarmAuthorizationState.authorized;
     } catch (_) {
       return false;
     }
@@ -58,7 +59,10 @@ class AlarmKitService {
         soundPath: soundAsset,
         uiConfig: AlarmUIConfig(
           stopButton: const AlarmButtonConfig(text: 'Tamam', icon: 'checkmark'),
-          repeatButton: AlarmButtonConfig(text: '$snoozeMin dk ertele', icon: 'zzz'),
+          repeatButton: AlarmButtonConfig(
+            text: '$snoozeMin dk ertele',
+            icon: 'zzz',
+          ),
         ),
       );
     } catch (e) {

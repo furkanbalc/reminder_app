@@ -32,7 +32,9 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
     final water = ref.watch(waterProvider).value;
     final total = water?.todayTotalMl ?? 0;
     final amounts = {200, 330, 500, settings.defaultGlassMl}.toList()..sort();
-    final lastEntry = water?.todayEntries.isNotEmpty == true ? water!.todayEntries.first : null;
+    final lastEntry = water?.todayEntries.isNotEmpty == true
+        ? water!.todayEntries.first
+        : null;
 
     return AlarmScaffold(
       alarmId: widget.alarmId,
@@ -40,7 +42,8 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
       label: 'Su zamanı',
       icon: Icons.water_drop_outlined,
       title: 'Su içme vakti',
-      subtitle: 'Bugün ${fmtLiters(total)} / ${fmtLiters(settings.goalMl)} L'
+      subtitle:
+          'Bugün ${fmtLiters(total)} / ${fmtLiters(settings.goalMl)} L'
           '${lastEntry == null ? '' : ' · Son içiş ${fmtTime(lastEntry.timestamp)}'}',
       extra: Wrap(
         alignment: WrapAlignment.center,
@@ -64,7 +67,9 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
       secondaryLabel: '10 dk ertele',
       onSecondary: () async {
         await ref.read(alarmServiceProvider).stop(widget.alarmId);
-        await ref.read(waterSchedulerProvider).snooze(s: settings, todayTotalMl: total);
+        await ref
+            .read(waterSchedulerProvider)
+            .snooze(s: settings, todayTotalMl: total);
       },
       caption: 'Alarm modunda zil, Su İçtim’e basana kadar çalmaya devam eder',
     );
@@ -72,7 +77,12 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
 }
 
 class _AmountChip extends StatelessWidget {
-  const _AmountChip({required this.label, required this.selected, required this.onTap, required this.deep});
+  const _AmountChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.deep,
+  });
 
   final String label;
   final bool selected;
@@ -91,11 +101,21 @@ class _AmountChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? Colors.white : Colors.white.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: selected ? Colors.white : Colors.white.withValues(alpha: 0.35), width: 1.5),
+          border: Border.all(
+            color: selected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.35),
+            width: 1.5,
+          ),
         ),
         child: Text(
           label,
-          style: AppText.body(context, size: 14, weight: FontWeight.w600, color: selected ? deep : Colors.white),
+          style: AppText.body(
+            context,
+            size: 14,
+            weight: FontWeight.w600,
+            color: selected ? deep : Colors.white,
+          ),
         ),
       ),
     );

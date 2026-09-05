@@ -36,7 +36,9 @@ String fmtRelative(DateTime target, {DateTime? from}) {
   final today = DateTime(now.year, now.month, now.day);
   final targetDay = DateTime(target.year, target.month, target.day);
   if (targetDay.difference(today).inDays >= 1) {
-    final dayWord = targetDay.difference(today).inDays == 1 ? 'yarın' : fmtDateShort(target);
+    final dayWord = targetDay.difference(today).inDays == 1
+        ? 'yarın'
+        : fmtDateShort(target);
     return '$dayWord ${fmtTime(target)}';
   }
   if (diff.inMinutes < 1) return 'şimdi';

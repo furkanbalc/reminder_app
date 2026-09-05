@@ -24,7 +24,12 @@ class WaterRepository {
       );
 
   Future<WaterEntry?> byId(int id) async {
-    final rows = await _db.query('water_entries', where: 'id = ?', whereArgs: [id], limit: 1);
+    final rows = await _db.query(
+      'water_entries',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     return rows.isEmpty ? null : WaterEntry.fromMap(rows.first);
   }
 

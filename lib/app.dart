@@ -28,8 +28,12 @@ class SuApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(settingsProvider.select((s) => s.themeMode.mode));
-    final onboardingDone = ref.watch(settingsProvider.select((s) => s.onboardingDone));
+    final themeMode = ref.watch(
+      settingsProvider.select((s) => s.themeMode.mode),
+    );
+    final onboardingDone = ref.watch(
+      settingsProvider.select((s) => s.onboardingDone),
+    );
     return MaterialApp(
       title: 'Su Hatırlatıcı',
       debugShowCheckedModeBanner: false,
@@ -45,7 +49,9 @@ class SuApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: onboardingDone ? const AppBootstrap(child: AppShell()) : const OnboardingScreen(),
+      home: onboardingDone
+          ? const AppBootstrap(child: AppShell())
+          : const OnboardingScreen(),
     );
   }
 }
@@ -61,7 +67,8 @@ class AppBootstrap extends ConsumerStatefulWidget {
   ConsumerState<AppBootstrap> createState() => _AppBootstrapState();
 }
 
-class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBindingObserver {
+class _AppBootstrapState extends ConsumerState<AppBootstrap>
+    with WidgetsBindingObserver {
   StreamSubscription<AlarmSet>? _ringSub;
   StreamSubscription<NotificationResponse>? _notifSub;
   StreamSubscription<AlarmUpdateEvent>? _kitSub;
@@ -105,9 +112,14 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     await widgets.init();
     _widgetSub = widgets.clicks.listen(_onWidgetClick);
     if (Platform.isIOS) {
-      await ref.read(alarmServiceProvider).configureSystemAlarm(settings.useSystemAlarm);
+      await ref
+          .read(alarmServiceProvider)
+          .configureSystemAlarm(settings.useSystemAlarm);
       if (await ref.read(alarmKitServiceProvider).isSupported()) {
-        _kitSub = ref.read(alarmKitServiceProvider).updates.listen(_onKitUpdate);
+        _kitSub = ref
+            .read(alarmKitServiceProvider)
+            .updates
+            .listen(_onKitUpdate);
       }
     }
 
@@ -150,18 +162,22 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
       final nav = navigatorKey.currentState;
       if (nav == null) return;
       if (WaterScheduler.isWaterId(alarm.id)) {
-        nav.push(MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => WaterAlarmScreen(alarmId: alarm.id),
-        ));
-      } else if (ReminderScheduler.isReminderAlarmId(alarm.id)) {
-        nav.push(MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => ReminderAlarmScreen(
-            alarmId: alarm.id,
-            reminderId: ReminderScheduler.reminderIdFromAlarmId(alarm.id),
+        nav.push(
+          MaterialPageRoute<void>(
+            fullscreenDialog: true,
+            builder: (_) => WaterAlarmScreen(alarmId: alarm.id),
           ),
-        ));
+        );
+      } else if (ReminderScheduler.isReminderAlarmId(alarm.id)) {
+        nav.push(
+          MaterialPageRoute<void>(
+            fullscreenDialog: true,
+            builder: (_) => ReminderAlarmScreen(
+              alarmId: alarm.id,
+              reminderId: ReminderScheduler.reminderIdFromAlarmId(alarm.id),
+            ),
+          ),
+        );
       }
     }
   }
@@ -175,7 +191,8 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     final alarms = ref.read(alarmServiceProvider);
     final info = alarms.kitInfo(event.alarmId);
     if (info == null) return;
-    if (DateTime.now().isBefore(info.at.subtract(const Duration(seconds: 5)))) return;
+    if (DateTime.now().isBefore(info.at.subtract(const Duration(seconds: 5))))
+      return;
     await alarms.forgetKit(event.alarmId);
     final ctx = navigatorKey.currentContext;
     if (ctx == null || !ctx.mounted || _kitSheetOpen) return;
@@ -188,10 +205,14 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
         _kitSheetOpen = false;
       }
     } else if (ReminderScheduler.isReminderAlarmId(localId)) {
-      navigatorKey.currentState?.push(MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => ReminderAlarmScreen(reminderId: ReminderScheduler.reminderIdFromAlarmId(localId)),
-      ));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => ReminderAlarmScreen(
+            reminderId: ReminderScheduler.reminderIdFromAlarmId(localId),
+          ),
+        ),
+      );
     }
   }
 
@@ -201,7 +222,9 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
       if (response.actionId == NotificationService.drankActionId) {
         final glass = ref.read(settingsProvider).defaultGlassMl;
         await ref.read(waterProvider.notifier).addEntry(glass);
-        scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text('$glass ml eklendi')));
+        scaffoldMessengerKey.currentState?.showSnackBar(
+          SnackBar(content: Text('$glass ml eklendi')),
+        );
       } else {
         ref.read(tabIndexProvider.notifier).set(0);
         final ctx = navigatorKey.currentContext;
@@ -212,10 +235,12 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap> with WidgetsBinding
     final reminderId = ReminderScheduler.reminderIdFromPayload(payload);
     if (reminderId != null) {
       ref.read(tabIndexProvider.notifier).set(1);
-      navigatorKey.currentState?.push(MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => ReminderAlarmScreen(reminderId: reminderId),
-      ));
+      navigatorKey.currentState?.push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => ReminderAlarmScreen(reminderId: reminderId),
+        ),
+      );
     }
   }
 

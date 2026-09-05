@@ -32,7 +32,12 @@ class RemindersScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
                 child: Row(
                   children: [
-                    Expanded(child: Text('Hatırlatıcılar', style: AppText.display(context, size: 28))),
+                    Expanded(
+                      child: Text(
+                        'Hatırlatıcılar',
+                        style: AppText.display(context, size: 28),
+                      ),
+                    ),
                     CircleIconButton(
                       icon: Icons.add_rounded,
                       color: c.amber,
@@ -49,8 +54,19 @@ class RemindersScreen extends ConsumerWidget {
                   child: Column(
                     spacing: 8,
                     children: [
-                      Icon(Icons.notifications_none_rounded, size: 40, color: c.mute),
-                      Text('Henüz hatırlatıcı yok', style: AppText.display(context, size: 18, weight: FontWeight.w600)),
+                      Icon(
+                        Icons.notifications_none_rounded,
+                        size: 40,
+                        color: c.mute,
+                      ),
+                      Text(
+                        'Henüz hatırlatıcı yok',
+                        style: AppText.display(
+                          context,
+                          size: 18,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
                       Text(
                         'Unutmak istemediğin bir şeyi + ile ekle,\nzamanı gelince bildirim veya alarmla haber vereyim.',
                         textAlign: TextAlign.center,
@@ -61,7 +77,13 @@ class RemindersScreen extends ConsumerWidget {
                 )
               else
                 for (final g in groups) ...[
-                  SectionLabel(g.title, padding: EdgeInsets.only(left: 4, top: g == groups.first ? 0 : 8)),
+                  SectionLabel(
+                    g.title,
+                    padding: EdgeInsets.only(
+                      left: 4,
+                      top: g == groups.first ? 0 : 8,
+                    ),
+                  ),
                   for (final item in g.items)
                     Dismissible(
                       key: ValueKey('reminder-${item.reminder.id}'),
@@ -69,16 +91,27 @@ class RemindersScreen extends ConsumerWidget {
                       background: Container(
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
-                        decoration: BoxDecoration(color: c.danger, borderRadius: BorderRadius.circular(18)),
-                        child: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                        decoration: BoxDecoration(
+                          color: c.danger,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.white,
+                        ),
                       ),
-                      confirmDismiss: (_) => _confirmDelete(context, item.reminder),
-                      onDismissed: (_) => ref.read(remindersProvider.notifier).remove(item.reminder.id),
+                      confirmDismiss: (_) =>
+                          _confirmDelete(context, item.reminder),
+                      onDismissed: (_) => ref
+                          .read(remindersProvider.notifier)
+                          .remove(item.reminder.id),
                       child: _ReminderTile(
                         reminder: item.reminder,
                         next: item.next,
                         onTap: () => _openForm(context, item.reminder),
-                        onToggle: (v) => ref.read(remindersProvider.notifier).toggle(item.reminder, v),
+                        onToggle: (v) => ref
+                            .read(remindersProvider.notifier)
+                            .toggle(item.reminder, v),
                       ),
                     ),
                 ],
@@ -96,7 +129,10 @@ class RemindersScreen extends ConsumerWidget {
         title: const Text('Hatırlatıcı silinsin mi?'),
         content: Text(r.title),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Vazgeç'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text('Sil', style: TextStyle(color: ctx.colors.danger)),
@@ -109,14 +145,18 @@ class RemindersScreen extends ConsumerWidget {
 
   void _openForm(BuildContext context, [Reminder? initial]) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => ReminderFormScreen(initial: initial)),
+      MaterialPageRoute<void>(
+        builder: (_) => ReminderFormScreen(initial: initial),
+      ),
     );
   }
 
   List<_Group> _group(List<Reminder> reminders, DateTime now) {
     final today = startOfDay(now);
     final tomorrow = today.add(const Duration(days: 1));
-    final weekEnd = today.add(Duration(days: 8 - now.weekday)); // pazartesi 00:00
+    final weekEnd = today.add(
+      Duration(days: 8 - now.weekday),
+    ); // pazartesi 00:00
 
     final active = <_Item>[];
     final off = <_Item>[];
@@ -133,9 +173,30 @@ class RemindersScreen extends ConsumerWidget {
 
     final groups = <_Group>[
       _Group('Bugün', active.where((i) => i.next!.isBefore(tomorrow)).toList()),
-      _Group('Yarın', active.where((i) => !i.next!.isBefore(tomorrow) && i.next!.isBefore(tomorrow.add(const Duration(days: 1)))).toList()),
-      _Group('Bu hafta', active.where((i) => !i.next!.isBefore(tomorrow.add(const Duration(days: 1))) && i.next!.isBefore(weekEnd)).toList()),
-      _Group('Daha sonra', active.where((i) => !i.next!.isBefore(weekEnd)).toList()),
+      _Group(
+        'Yarın',
+        active
+            .where(
+              (i) =>
+                  !i.next!.isBefore(tomorrow) &&
+                  i.next!.isBefore(tomorrow.add(const Duration(days: 1))),
+            )
+            .toList(),
+      ),
+      _Group(
+        'Bu hafta',
+        active
+            .where(
+              (i) =>
+                  !i.next!.isBefore(tomorrow.add(const Duration(days: 1))) &&
+                  i.next!.isBefore(weekEnd),
+            )
+            .toList(),
+      ),
+      _Group(
+        'Daha sonra',
+        active.where((i) => !i.next!.isBefore(weekEnd)).toList(),
+      ),
       _Group('Kapalı', off),
     ];
     return groups.where((g) => g.items.isNotEmpty).toList();
@@ -197,7 +258,11 @@ class _ReminderTile extends StatelessWidget {
             ),
             child: Text(
               fmtTime(when),
-              style: AppText.display(context, size: 18, color: on ? c.amberDeep : c.mute),
+              style: AppText.display(
+                context,
+                size: 18,
+                color: on ? c.amberDeep : c.mute,
+              ),
             ),
           ),
           Expanded(
@@ -209,7 +274,12 @@ class _ReminderTile extends StatelessWidget {
                   reminder.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppText.body(context, size: 16, weight: FontWeight.w600, color: on ? c.ink : c.mute),
+                  style: AppText.body(
+                    context,
+                    size: 16,
+                    weight: FontWeight.w600,
+                    color: on ? c.ink : c.mute,
+                  ),
                 ),
                 Row(
                   spacing: 6,
@@ -217,8 +287,10 @@ class _ReminderTile extends StatelessWidget {
                     Icon(
                       switch (reminder.alertType) {
                         AlertType.alarm => Icons.alarm_rounded,
-                        AlertType.escalating => Icons.notifications_active_outlined,
-                        AlertType.notification => Icons.notifications_none_rounded,
+                        AlertType.escalating =>
+                          Icons.notifications_active_outlined,
+                        AlertType.notification =>
+                          Icons.notifications_none_rounded,
                       },
                       size: 14,
                       color: c.mute,
@@ -228,7 +300,12 @@ class _ReminderTile extends StatelessWidget {
                         meta,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppText.body(context, size: 13, weight: FontWeight.w500, color: c.mute),
+                        style: AppText.body(
+                          context,
+                          size: 13,
+                          weight: FontWeight.w500,
+                          color: c.mute,
+                        ),
                       ),
                     ),
                   ],
@@ -236,7 +313,11 @@ class _ReminderTile extends StatelessWidget {
               ],
             ),
           ),
-          AppToggle(value: reminder.enabled, onChanged: onToggle, activeColor: c.amber),
+          AppToggle(
+            value: reminder.enabled,
+            onChanged: onToggle,
+            activeColor: c.amber,
+          ),
         ],
       ),
     );

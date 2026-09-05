@@ -36,7 +36,8 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     final r = widget.initial;
     _title = TextEditingController(text: r?.title ?? '');
     final now = DateTime.now();
-    _dateTime = r?.dateTime ?? DateTime(now.year, now.month, now.day, now.hour + 1);
+    _dateTime =
+        r?.dateTime ?? DateTime(now.year, now.month, now.day, now.hour + 1);
     _repeat = r?.repeat ?? RepeatRule.none;
     _alertType = r?.alertType ?? ref.read(settingsProvider).alertType;
     _sound = r?.sound ?? ref.read(settingsProvider).sound;
@@ -60,20 +61,40 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
       helpText: 'Tarih seç',
     );
     if (d == null) return;
-    setState(() => _dateTime = DateTime(d.year, d.month, d.day, _dateTime.hour, _dateTime.minute));
+    setState(
+      () => _dateTime = DateTime(
+        d.year,
+        d.month,
+        d.day,
+        _dateTime.hour,
+        _dateTime.minute,
+      ),
+    );
   }
 
   Future<void> _pickTime() async {
-    final t = await pickTime(context, TimeOfDay.fromDateTime(_dateTime), help: 'Saat seç');
+    final t = await pickTime(
+      context,
+      TimeOfDay.fromDateTime(_dateTime),
+      help: 'Saat seç',
+    );
     if (t == null) return;
-    setState(() => _dateTime = DateTime(_dateTime.year, _dateTime.month, _dateTime.day, t.hour, t.minute));
+    setState(
+      () => _dateTime = DateTime(
+        _dateTime.year,
+        _dateTime.month,
+        _dateTime.day,
+        t.hour,
+        t.minute,
+      ),
+    );
   }
 
   static String _preAlertLabel(int m) => switch (m) {
-        0 => 'Yok',
-        60 => '1 sa önce',
-        _ => '$m dk önce',
-      };
+    0 => 'Yok',
+    60 => '1 sa önce',
+    _ => '$m dk önce',
+  };
 
   Future<void> _pickPreAlert() async {
     final v = await showOptionSheet<int>(
@@ -81,13 +102,20 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
       title: 'Önceden haber ver',
       selected: _preAlertMin,
       accent: context.colors.amber,
-      options: [for (final m in Reminder.preAlertOptions) PickerOption(m, _preAlertLabel(m))],
+      options: [
+        for (final m in Reminder.preAlertOptions)
+          PickerOption(m, _preAlertLabel(m)),
+      ],
     );
     if (v != null) setState(() => _preAlertMin = v);
   }
 
   Future<void> _pickSound() async {
-    final v = await showSoundPicker(context, selected: _sound, accent: context.colors.amber);
+    final v = await showSoundPicker(
+      context,
+      selected: _sound,
+      accent: context.colors.amber,
+    );
     if (v != null) setState(() => _sound = v);
   }
 
@@ -96,14 +124,17 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
     if (title.isEmpty) return;
     if (_repeat == RepeatRule.none && !_dateTime.isAfter(DateTime.now())) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geçmiş bir zaman seçtin, ileri bir zaman seç')),
+        const SnackBar(
+          content: Text('Geçmiş bir zaman seçtin, ileri bir zaman seç'),
+        ),
       );
       return;
     }
     setState(() => _saving = true);
     final navigator = Navigator.of(context);
     final notifier = ref.read(remindersProvider.notifier);
-    final base = widget.initial ??
+    final base =
+        widget.initial ??
         Reminder(
           id: Reminder.newId,
           title: title,
@@ -141,7 +172,10 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
         title: const Text('Hatırlatıcı silinsin mi?'),
         content: Text(r.title),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Vazgeç')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Vazgeç'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: Text('Sil', style: TextStyle(color: ctx.colors.danger)),
@@ -194,8 +228,14 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                         minLines: 2,
                         maxLines: 4,
                         textCapitalization: TextCapitalization.sentences,
-                        style: AppText.body(context, size: 17, weight: FontWeight.w500),
-                        decoration: const InputDecoration(hintText: 'Ne hatırlatayım?'),
+                        style: AppText.body(
+                          context,
+                          size: 17,
+                          weight: FontWeight.w500,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Ne hatırlatayım?',
+                        ),
                       ),
                     ),
                     _Field(
@@ -207,12 +247,18 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                             child: _ValueTile(
                               icon: Icons.calendar_today_outlined,
                               text: fmtDateShort(_dateTime),
-                              onTap: _repeat == RepeatRule.none ? _pickDate : null,
+                              onTap: _repeat == RepeatRule.none
+                                  ? _pickDate
+                                  : null,
                               dimmed: _repeat != RepeatRule.none,
                             ),
                           ),
                           Expanded(
-                            child: _ValueTile(icon: Icons.schedule_rounded, text: fmtTime(_dateTime), onTap: _pickTime),
+                            child: _ValueTile(
+                              icon: Icons.schedule_rounded,
+                              text: fmtTime(_dateTime),
+                              onTap: _pickTime,
+                            ),
                           ),
                         ],
                       ),
@@ -245,9 +291,11 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                                 Expanded(
                                   child: _TypeCard(
                                     icon: switch (t) {
-                                      AlertType.notification => Icons.notifications_none_rounded,
+                                      AlertType.notification =>
+                                        Icons.notifications_none_rounded,
                                       AlertType.alarm => Icons.alarm_rounded,
-                                      AlertType.escalating => Icons.notifications_active_outlined,
+                                      AlertType.escalating =>
+                                        Icons.notifications_active_outlined,
                                     },
                                     title: t.label,
                                     selected: _alertType == t,
@@ -258,7 +306,14 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                           ),
                           Padding(
                             padding: const EdgeInsets.only(left: 4),
-                            child: Text(_alertType.description, style: AppText.body(context, size: 12, color: c.mute)),
+                            child: Text(
+                              _alertType.description,
+                              style: AppText.body(
+                                context,
+                                size: 12,
+                                color: c.mute,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -272,8 +327,21 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                         child: Row(
                           spacing: 10,
                           children: [
-                            Icon(Icons.notifications_paused_outlined, size: 20, color: c.mute),
-                            Expanded(child: Text('Önceden haber ver', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
+                            Icon(
+                              Icons.notifications_paused_outlined,
+                              size: 20,
+                              color: c.mute,
+                            ),
+                            Expanded(
+                              child: Text(
+                                'Önceden haber ver',
+                                style: AppText.body(
+                                  context,
+                                  size: 15,
+                                  weight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
                             ValueTrailing(_preAlertLabel(_preAlertMin)),
                           ],
                         ),
@@ -289,8 +357,21 @@ class _ReminderFormScreenState extends ConsumerState<ReminderFormScreen> {
                           child: Row(
                             spacing: 10,
                             children: [
-                              Icon(Icons.volume_up_outlined, size: 20, color: c.mute),
-                              Expanded(child: Text('Alarm sesi', style: AppText.body(context, size: 15, weight: FontWeight.w500))),
+                              Icon(
+                                Icons.volume_up_outlined,
+                                size: 20,
+                                color: c.mute,
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Alarm sesi',
+                                  style: AppText.body(
+                                    context,
+                                    size: 15,
+                                    weight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                               ValueTrailing(_sound.label),
                             ],
                           ),
@@ -332,7 +413,12 @@ class _Field extends StatelessWidget {
 }
 
 class _ValueTile extends StatelessWidget {
-  const _ValueTile({required this.icon, required this.text, required this.onTap, this.dimmed = false});
+  const _ValueTile({
+    required this.icon,
+    required this.text,
+    required this.onTap,
+    this.dimmed = false,
+  });
 
   final IconData icon;
   final String text;
@@ -355,7 +441,12 @@ class _ValueTile extends StatelessWidget {
             Expanded(
               child: Text(
                 text,
-                style: AppText.body(context, size: 15, weight: FontWeight.w600, color: dimmed ? c.mute : c.ink),
+                style: AppText.body(
+                  context,
+                  size: 15,
+                  weight: FontWeight.w600,
+                  color: dimmed ? c.mute : c.ink,
+                ),
               ),
             ),
           ],
@@ -400,7 +491,12 @@ class _TypeCard extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppText.body(context, size: 14, weight: FontWeight.w600, color: selected ? c.amberDeep : c.ink),
+                style: AppText.body(
+                  context,
+                  size: 14,
+                  weight: FontWeight.w600,
+                  color: selected ? c.amberDeep : c.ink,
+                ),
               ),
             ],
           ),
@@ -411,8 +507,15 @@ class _TypeCard extends StatelessWidget {
               child: Container(
                 width: 20,
                 height: 20,
-                decoration: BoxDecoration(color: c.amber, shape: BoxShape.circle),
-                child: const Icon(Icons.check_rounded, size: 12, color: Colors.white),
+                decoration: BoxDecoration(
+                  color: c.amber,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 12,
+                  color: Colors.white,
+                ),
               ),
             ),
         ],

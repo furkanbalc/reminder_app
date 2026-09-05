@@ -26,27 +26,35 @@ class WaterSettings {
 
   final int goalMl;
   final int defaultGlassMl;
+
   /// Gün içi dakika (08:00 -> 480)
   final int activeStartMin;
   final int activeEndMin;
+
   /// Hafta sonu için farklı saatler
   final bool weekendEnabled;
   final int weekendStartMin;
   final int weekendEndMin;
   final int intervalMin;
   final AlertType alertType;
+
   /// Yükselen modda bildirimden alarma geçiş süresi (dk)
   final int escalationMin;
+
   /// Erteleme süresi (dk)
   final int snoozeMin;
   final AlarmSound sound;
   final bool stopWhenGoalReached;
+
   /// Akşam "hedefe X ml kaldı" bildirimi
   final bool eveningNudge;
+
   /// Pazar akşamı haftalık özet
   final bool weeklySummary;
+
   /// Apple Sağlık / Health Connect'e yaz
   final bool healthSync;
+
   /// iOS 26+ sistem alarmı (AlarmKit) kullan
   final bool useSystemAlarm;
   final AppThemeMode themeMode;
@@ -69,7 +77,8 @@ class WaterSettings {
 
   /// Verilen günün aktif saat aralığı (dakika olarak başlangıç, bitiş).
   (int, int) activeWindowFor(DateTime day) {
-    final weekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+    final weekend =
+        day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
     if (weekendEnabled && weekend) return (weekendStartMin, weekendEndMin);
     return (activeStartMin, activeEndMin);
   }
@@ -121,28 +130,31 @@ class WaterSettings {
   }
 
   Map<String, Object?> toJson() => {
-        'goalMl': goalMl,
-        'defaultGlassMl': defaultGlassMl,
-        'activeStartMin': activeStartMin,
-        'activeEndMin': activeEndMin,
-        'weekendEnabled': weekendEnabled,
-        'weekendStartMin': weekendStartMin,
-        'weekendEndMin': weekendEndMin,
-        'intervalMin': intervalMin,
-        'alertType': alertType.name,
-        'escalationMin': escalationMin,
-        'snoozeMin': snoozeMin,
-        'sound': sound.name,
-        'stopWhenGoalReached': stopWhenGoalReached,
-        'eveningNudge': eveningNudge,
-        'weeklySummary': weeklySummary,
-        'healthSync': healthSync,
-        'useSystemAlarm': useSystemAlarm,
-        'themeMode': themeMode.name,
-        'weightKg': weightKg,
-      };
+    'goalMl': goalMl,
+    'defaultGlassMl': defaultGlassMl,
+    'activeStartMin': activeStartMin,
+    'activeEndMin': activeEndMin,
+    'weekendEnabled': weekendEnabled,
+    'weekendStartMin': weekendStartMin,
+    'weekendEndMin': weekendEndMin,
+    'intervalMin': intervalMin,
+    'alertType': alertType.name,
+    'escalationMin': escalationMin,
+    'snoozeMin': snoozeMin,
+    'sound': sound.name,
+    'stopWhenGoalReached': stopWhenGoalReached,
+    'eveningNudge': eveningNudge,
+    'weeklySummary': weeklySummary,
+    'healthSync': healthSync,
+    'useSystemAlarm': useSystemAlarm,
+    'themeMode': themeMode.name,
+    'weightKg': weightKg,
+  };
 
-  factory WaterSettings.fromJson(Map<String, Object?> j, {WaterSettings base = const WaterSettings()}) {
+  factory WaterSettings.fromJson(
+    Map<String, Object?> j, {
+    WaterSettings base = const WaterSettings(),
+  }) {
     int i(String k, int d) => (j[k] as num?)?.toInt() ?? d;
     bool b(String k, bool d) => j[k] as bool? ?? d;
     return base.copyWith(

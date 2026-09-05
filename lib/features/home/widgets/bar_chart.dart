@@ -7,9 +7,15 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/format.dart';
 
 class BarData {
-  const BarData({required this.label, required this.valueMl, this.isToday = false, this.showLabel = true});
+  const BarData({
+    required this.label,
+    required this.valueMl,
+    this.isToday = false,
+    this.showLabel = true,
+  });
 
   final String label;
+
   /// null: gelecek gün
   final int? valueMl;
   final bool isToday;
@@ -59,7 +65,12 @@ class WaterBarChart extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 4),
                   child: Text(
                     'hedef ${fmtLiters(goalMl)}',
-                    style: AppText.body(context, size: 10, weight: FontWeight.w600, color: c.water),
+                    style: AppText.body(
+                      context,
+                      size: 10,
+                      weight: FontWeight.w600,
+                      color: c.water,
+                    ),
                   ),
                 ),
               ],
@@ -88,7 +99,9 @@ class WaterBarChart extends StatelessWidget {
                                   style: AppText.body(
                                     context,
                                     size: dense ? 10 : 11,
-                                    weight: b.isToday ? FontWeight.w700 : FontWeight.w500,
+                                    weight: b.isToday
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
                                     color: b.isToday ? c.ink : c.mute,
                                   ),
                                 )
@@ -111,11 +124,16 @@ class WaterBarChart extends StatelessWidget {
       return Container(
         height: 6,
         constraints: BoxConstraints(maxWidth: dense ? 12 : 26),
-        decoration: BoxDecoration(color: c.line, borderRadius: BorderRadius.circular(3)),
+        decoration: BoxDecoration(
+          color: c.line,
+          borderRadius: BorderRadius.circular(3),
+        ),
       );
     }
     final h = math.max(4.0, barArea * (v / scaleMax));
-    final color = b.isToday ? c.waterDeep : (v >= goalMl ? c.water : c.waterLight);
+    final color = b.isToday
+        ? c.waterDeep
+        : (v >= goalMl ? c.water : c.waterLight);
     return TweenAnimationBuilder<double>(
       tween: Tween(end: h),
       duration: const Duration(milliseconds: 500),
@@ -149,7 +167,11 @@ class _DashedLinePainter extends CustomPainter {
     const gap = 3.0;
     var x = 0.0;
     while (x < size.width) {
-      canvas.drawLine(Offset(x, 0), Offset(math.min(x + dash, size.width), 0), paint);
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(math.min(x + dash, size.width), 0),
+        paint,
+      );
       x += dash + gap;
     }
   }
