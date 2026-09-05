@@ -258,8 +258,9 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final before = state.value?.todayTotalMl ?? 0;
     final when = at ?? DateTime.now();
     final entry = await _repo.add(amountMl, when);
-    if (s.healthSync)
+    if (s.healthSync) {
       await ref.read(healthServiceProvider).writeWater(amountMl, when);
+    }
     final st = await _refreshAndReschedule();
     final reached =
         isSameDay(when, DateTime.now()) &&
@@ -292,8 +293,9 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     final s = ref.read(settingsProvider);
     final old = await _repo.byId(id);
     await _repo.delete(id);
-    if (s.healthSync && old != null)
+    if (s.healthSync && old != null) {
       await ref.read(healthServiceProvider).deleteWater(old.timestamp);
+    }
     await _refreshAndReschedule();
   }
 

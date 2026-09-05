@@ -29,10 +29,11 @@ class WidgetService {
   Future<void> init() async {
     try {
       if (Platform.isIOS) await HomeWidget.setAppGroupId(appGroupId);
-      if (Platform.isAndroid)
+      if (Platform.isAndroid) {
         await HomeWidget.registerInteractivityCallback(
           widgetBackgroundCallback,
         );
+      }
     } catch (e) {
       debugPrint('Widget servisi başlatılamadı: $e');
     }

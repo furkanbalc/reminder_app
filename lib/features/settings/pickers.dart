@@ -90,8 +90,9 @@ class _SoundPickerSheetState extends State<_SoundPickerSheet> {
   void initState() {
     super.initState();
     _player.playerStateStream.listen((st) {
-      if (st.processingState == ProcessingState.completed && mounted)
+      if (st.processingState == ProcessingState.completed && mounted) {
         setState(() => _playing = null);
+      }
     });
   }
 

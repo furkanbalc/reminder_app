@@ -81,7 +81,7 @@ class _AddWaterSheetState extends ConsumerState<AddWaterSheet> {
     navigator.pop();
     if (result.reachedGoalNow) {
       final settings = ref.read(settingsProvider);
-      // ignore: use_build_context_synchronously
+      if (!rootContext.mounted) return;
       await showGoalCelebration(
         rootContext,
         goalMl: settings.goalMl,

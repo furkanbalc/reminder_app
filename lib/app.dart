@@ -191,8 +191,9 @@ class _AppBootstrapState extends ConsumerState<AppBootstrap>
     final alarms = ref.read(alarmServiceProvider);
     final info = alarms.kitInfo(event.alarmId);
     if (info == null) return;
-    if (DateTime.now().isBefore(info.at.subtract(const Duration(seconds: 5))))
+    if (DateTime.now().isBefore(info.at.subtract(const Duration(seconds: 5)))) {
       return;
+    }
     await alarms.forgetKit(event.alarmId);
     final ctx = navigatorKey.currentContext;
     if (ctx == null || !ctx.mounted || _kitSheetOpen) return;

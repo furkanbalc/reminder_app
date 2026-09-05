@@ -75,11 +75,12 @@ class BackupService {
     }
     WaterSettings? settings;
     final sj = data['settings'];
-    if (sj is Map)
+    if (sj is Map) {
       settings = WaterSettings.fromJson(
         sj.cast<String, Object?>(),
         base: current,
       );
+    }
     return ImportResult(
       entriesAdded: entriesAdded,
       remindersAdded: remindersAdded,
