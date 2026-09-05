@@ -6,10 +6,5 @@
 	<true/>
 	<key>com.apple.developer.healthkit.access</key>
 	<array/>
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.flutter-alarmkit</string>
-		<string>group.com.furkanbalci.suHatirlatici</string>
-	</array>
 </dict>
 </plist>

@@ -32,20 +32,10 @@ flutter run
 
 Testler: `flutter test`
 
-## Xcode'da yapılması gereken iki adım (bir kez)
+## Park edilenler
 
-Bu iki hedef Xcode arayüzünden oluşturulur; kod dosyaları hazır.
-
-1. **AlarmKit Live Activity** (sistem alarmının canlı etkinlik arayüzü)
-   - `ios/Runner.xcworkspace` aç → File > New > Target > *Widget Extension*, adı tam olarak `AlarmkitWidget`, yalnızca *Live Activity* işaretli.
-   - Runner ve AlarmkitWidgetExtension hedeflerinde Signing & Capabilities > App Groups > `group.flutter-alarmkit` ekle.
-   - Xcode'u kapat, `dart run flutter_alarmkit:setup` çalıştır (dosyaları `ios/AlarmkitWidget/` altına yazar), `dart run flutter_alarmkit:setup --doctor` ile doğrula.
-2. **Ana ekran widget'ı**
-   - File > New > Target > *Widget Extension*, adı `SuWidget`, Live Activity işaretsiz.
-   - Xcode'un ürettiği Swift dosyalarını `ios/SuWidget/` içindekilerle değiştir.
-   - Runner ve SuWidgetExtension hedeflerinde App Groups > `group.com.furkanbalci.suHatirlatici` ekle.
-
-HealthKit yetkisi `ios/Runner/Runner.entitlements` içinde hazır; otomatik imzalama App ID'ye ekler.
+- **iOS ana ekran widget'ı** ve **AlarmKit canlı etkinlik arayüzü**: her ikisi de Xcode'da ek hedef ve App Groups yetkisi ister; ücretsiz Apple hesabıyla imzalama sorun çıkardığı için şimdilik kapalı. Kaynaklar `ios/SuWidget/` ve `ios/AlarmkitWidget/` altında duruyor, `Runner.entitlements` içinde App Groups yok.
+- Android widget'ı çalışır durumda (`SuWidgetProvider`).
 
 ## Platform notları
 
