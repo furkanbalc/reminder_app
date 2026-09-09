@@ -11,6 +11,7 @@ import '../../../data/models/water_settings.dart';
 import '../../../providers/providers.dart';
 import 'add_water_sheet.dart';
 import 'bar_chart.dart';
+import 'day_detail_sheet.dart';
 
 class StatsCard extends ConsumerStatefulWidget {
   const StatsCard({super.key, required this.state, required this.settings});
@@ -313,6 +314,7 @@ class _StatsCardState extends ConsumerState<StatsCard> {
         WaterBarChart(
           goalMl: widget.settings.goalMl,
           dense: !isWeek,
+          onBarTap: (i) => showDayDetailSheet(context, days[i].day),
           bars: [
             for (var i = 0; i < days.length; i++)
               BarData(

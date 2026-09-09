@@ -29,12 +29,16 @@ class WaterBarChart extends StatelessWidget {
     required this.goalMl,
     this.dense = false,
     this.height = 122,
+    this.onBarTap,
   });
 
   final List<BarData> bars;
   final int goalMl;
   final bool dense;
   final double height;
+
+  /// Bir güne dokunulunca (gelecek günler hariç).
+  final void Function(int index)? onBarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -80,35 +84,41 @@ class WaterBarChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             spacing: dense ? 3 : 8,
             children: [
-              for (final b in bars)
+              for (var i = 0; i < bars.length; i++)
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _bar(b, barArea, scaleMax, c),
-                      SizedBox(
-                        height: labelHeight,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: b.showLabel
-                              ? Text(
-                                  b.label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.visible,
-                                  softWrap: false,
-                                  style: AppText.body(
-                                    context,
-                                    size: dense ? 10 : 11,
-                                    weight: b.isToday
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    color: b.isToday ? c.ink : c.mute,
-                                  ),
-                                )
-                              : null,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: bars[i].valueMl == null || onBarTap == null
+                        ? null
+                        : () => onBarTap!(i),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        _bar(bars[i], barArea, scaleMax, c),
+                        SizedBox(
+                          height: labelHeight,
+                          child: Align(
+                            alignment: Alignment.bottomCenter,
+                            child: bars[i].showLabel
+                                ? Text(
+                                    bars[i].label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.visible,
+                                    softWrap: false,
+                                    style: AppText.body(
+                                      context,
+                                      size: dense ? 10 : 11,
+                                      weight: bars[i].isToday
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: bars[i].isToday ? c.ink : c.mute,
+                                    ),
+                                  )
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
             ],

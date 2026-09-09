@@ -355,6 +355,17 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   }
 }
 
+/// Belirli bir günün su kayıtları (grafikte güne dokununca).
+final dayEntriesProvider = FutureProvider.autoDispose
+    .family<List<WaterEntry>, DateTime>((ref, day) async {
+      ref.watch(waterProvider); // kayıt değişince yenile
+      final start = startOfDay(day);
+      final list = await ref
+          .read(waterRepositoryProvider)
+          .entriesBetween(start, start.add(const Duration(days: 1)));
+      return list.reversed.toList();
+    });
+
 /// Geçmiş hafta/ay istatistikleri. offset 0 = bu dönem, -1 = önceki dönem.
 class PeriodKey {
   const PeriodKey({required this.isWeek, required this.offset});
