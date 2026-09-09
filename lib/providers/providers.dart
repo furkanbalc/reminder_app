@@ -65,6 +65,7 @@ final waterSchedulerProvider = Provider(
   (ref) => WaterScheduler(
     ref.watch(notificationServiceProvider),
     ref.watch(alarmServiceProvider),
+    ref.watch(sharedPreferencesProvider),
   ),
 );
 final reminderSchedulerProvider = Provider(
@@ -261,7 +262,7 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
     if (s.healthSync) {
       await ref.read(healthServiceProvider).writeWater(amountMl, when);
     }
-    final st = await _refreshAndReschedule();
+    final st = await _refreshAndReschedule(clearSnooze: true);
     final reached =
         isSameDay(when, DateTime.now()) &&
         before < s.goalMl &&
@@ -318,17 +319,21 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
   /// Ayar değişikliğinde: yeniden yükle ve hatırlatmaları kur.
   Future<void> rescheduleReminders() => _refreshAndReschedule();
 
-  Future<WaterState> _refreshAndReschedule() async {
+  Future<WaterState> _refreshAndReschedule({bool clearSnooze = false}) async {
     final s = ref.read(settingsProvider);
     final st = await _load(s);
     state = AsyncData(st);
     await _pushWidget(st, s);
     // Onlarca bildirim/alarm kurmak birkaç saniye sürebilir; arayüzü bekletmez.
-    unawaited(_rescheduleInBackground(st, s));
+    unawaited(_rescheduleInBackground(st, s, clearSnooze: clearSnooze));
     return st;
   }
 
-  Future<void> _rescheduleInBackground(WaterState st, WaterSettings s) async {
+  Future<void> _rescheduleInBackground(
+    WaterState st,
+    WaterSettings s, {
+    bool clearSnooze = false,
+  }) async {
     try {
       await ref
           .read(waterSchedulerProvider)
@@ -337,6 +342,7 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
             todayTotalMl: st.todayTotalMl,
             lastIntakeAt: st.lastIntakeAt,
             weekSummary: _weekSummary(st, s),
+            clearSnooze: clearSnooze,
           );
     } catch (e) {
       debugPrint('Su hatırlatmaları kurulamadı: $e');

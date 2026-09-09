@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/utils/format.dart';
 import '../data/models/enums.dart';
@@ -20,10 +21,27 @@ class WaterSlot {
 ///  1000–1349 dilim bildirimi/alarmı, 1400–1749 yükselen mod alarmı,
 ///  1990–1991 erteleme, 1997 haftalık özet, 1998 akşam hatırlatması.
 class WaterScheduler {
-  WaterScheduler(this._notifications, this._alarms);
+  WaterScheduler(this._notifications, this._alarms, this._prefs);
 
   final NotificationService _notifications;
   final AlarmService _alarms;
+  final SharedPreferences _prefs;
+
+  static const _snoozeKey = 'water_snooze_until';
+
+  /// Aktif erteleme varsa bitiş zamanı; yoksa null.
+  DateTime? get snoozeUntil {
+    final ms = _prefs.getInt(_snoozeKey);
+    if (ms == null) return null;
+    final at = DateTime.fromMillisecondsSinceEpoch(ms);
+    return at.isAfter(DateTime.now()) ? at : null;
+  }
+
+  Future<void> _setSnooze(DateTime? at) => at == null
+      ? _prefs.remove(_snoozeKey)
+      : _prefs.setInt(_snoozeKey, at.millisecondsSinceEpoch);
+
+  static bool isSnoozeId(int id) => id == snoozeId || id == snoozeId + 1;
 
   static const baseId = 1000;
   static const perDay = 50;
@@ -45,6 +63,8 @@ class WaterScheduler {
 
   static bool isWaterId(int id) => id >= baseId && id < 2000;
 
+  /// Bugünkü dilimler son içişten [intervalMin] sonra başlar ve aralıkla sürer;
+  /// bugün içilmediyse aktif başlangıçtan itibaren. İleri günler aktif başlangıçtan.
   List<WaterSlot> slots(
     WaterSettings s,
     DateTime now, {
@@ -54,24 +74,32 @@ class WaterScheduler {
     final result = <WaterSlot>[];
     final max = maxSlotsFor(s.alertType);
     final threshold = now.add(const Duration(seconds: 30));
-    // Az önce içildiyse hemen ardından gelen dilim atlanır.
-    final skipBefore = lastIntakeAt?.add(Duration(minutes: s.intervalMin ~/ 2));
+    final interval = Duration(minutes: s.intervalMin);
 
     for (var dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
       if (dayOffset == 0 && s.stopWhenGoalReached && goalReachedToday) continue;
       final day = DateTime(now.year, now.month, now.day + dayOffset);
       final (startMin, endMin) = s.activeWindowFor(day);
+      final start = day.add(Duration(minutes: startMin));
       final end = day.add(Duration(minutes: endMin));
-      var t = day.add(Duration(minutes: startMin));
+
+      var t = start;
+      if (dayOffset == 0 &&
+          lastIntakeAt != null &&
+          lastIntakeAt.isAfter(start)) {
+        t = lastIntakeAt.add(interval);
+      }
+      // Geçmişte kalan dilimleri aralığı koruyarak atla.
+      while (!t.isAfter(threshold)) {
+        t = t.add(interval);
+      }
+
       var added = 0;
       while (!t.isAfter(end) && added < perDay) {
         if (result.length >= max) return result;
-        final tooSoon = skipBefore != null && t.isBefore(skipBefore);
-        if (t.isAfter(threshold) && !tooSoon) {
-          result.add(WaterSlot(id: baseId + dayOffset * perDay + added, at: t));
-          added++;
-        }
-        t = t.add(Duration(minutes: s.intervalMin));
+        result.add(WaterSlot(id: baseId + dayOffset * perDay + added, at: t));
+        added++;
+        t = t.add(interval);
       }
     }
     return result;
@@ -83,6 +111,8 @@ class WaterScheduler {
     required bool goalReachedToday,
     DateTime? lastIntakeAt,
   }) {
+    final snooze = snoozeUntil;
+    if (snooze != null && snooze.isAfter(now)) return snooze;
     final list = slots(
       s,
       now,
@@ -97,13 +127,21 @@ class WaterScheduler {
 
   /// Hatırlatmaları baştan kurar. Üst üste çağrılırsa yalnızca en son istek uygulanır;
   /// böylece eski ayarlarla başlamış bir kurulum yenisinin üstüne yazamaz.
+  /// [clearSnooze]: su içildiğinde aktif erteleme de kalkar; diğer durumlarda korunur.
   Future<void> reschedule({
     required WaterSettings s,
     required int todayTotalMl,
     DateTime? lastIntakeAt,
     String? weekSummary,
+    bool clearSnooze = false,
   }) async {
-    _pending = _RescheduleRequest(s, todayTotalMl, lastIntakeAt, weekSummary);
+    _pending = _RescheduleRequest(
+      s,
+      todayTotalMl,
+      lastIntakeAt,
+      weekSummary,
+      clearSnooze,
+    );
     if (_running) return;
     _running = true;
     try {
@@ -125,7 +163,8 @@ class WaterScheduler {
       return;
     }
     final sw = Stopwatch()..start();
-    await cancelAll();
+    if (r.clearSnooze) await _setSnooze(null);
+    await cancelAll(keepSnooze: snoozeUntil != null);
     final now = DateTime.now();
     final list = slots(
       s,
@@ -165,21 +204,21 @@ class WaterScheduler {
     await _notifications.cancel(snoozeId);
     await _alarms.stop(snoozeId);
     await _alarms.stop(snoozeId + 1);
+    final at = DateTime.now().add(Duration(minutes: s.snoozeMin));
+    await _setSnooze(at);
     await _schedule(
-      WaterSlot(
-        id: snoozeId,
-        at: DateTime.now().add(Duration(minutes: s.snoozeMin)),
-      ),
+      WaterSlot(id: snoozeId, at: at),
       s,
       todayTotalMl,
       escalationId: snoozeId + 1,
     );
   }
 
-  Future<void> cancelAll() async {
+  Future<void> cancelAll({bool keepSnooze = false}) async {
+    bool target(int id) => isWaterId(id) && !(keepSnooze && isSnoozeId(id));
     final pending = await _notifications.pendingIds();
-    await _notifications.cancelMany(pending.where(isWaterId));
-    await _alarms.stopWhere(isWaterId);
+    await _notifications.cancelMany(pending.where(target));
+    await _alarms.stopWhere(target);
   }
 
   Future<void> _schedule(
@@ -293,9 +332,11 @@ class _RescheduleRequest {
     this.todayTotalMl,
     this.lastIntakeAt,
     this.weekSummary,
+    this.clearSnooze,
   );
   final WaterSettings settings;
   final int todayTotalMl;
   final DateTime? lastIntakeAt;
   final String? weekSummary;
+  final bool clearSnooze;
 }

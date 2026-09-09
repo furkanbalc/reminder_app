@@ -23,6 +23,7 @@ void main() {
     scheduler = WaterScheduler(
       NotificationService(),
       AlarmService(prefs, AlarmKitService()),
+      prefs,
     );
   });
 
@@ -81,7 +82,7 @@ void main() {
       expect(slots[1].at.difference(slots[0].at), const Duration(minutes: 5));
     });
 
-    test('az önce su içildiyse hemen sonraki dilim atlanır', () {
+    test('son içişten sonra aralık kadar beklenir', () {
       final justDrank = DateTime(2026, 9, 5, 13, 40);
       final next = scheduler.next(
         settings,
@@ -89,8 +90,43 @@ void main() {
         goalReachedToday: false,
         lastIntakeAt: justDrank,
       );
-      // 14:00 dilimi son içişe 20 dk uzak (< 45 dk), atlanır; sıradaki 15:30
-      expect(next, DateTime(2026, 9, 5, 15, 30));
+      expect(next, DateTime(2026, 9, 5, 15, 10));
+      final slots = scheduler.slots(
+        settings,
+        now,
+        goalReachedToday: false,
+        lastIntakeAt: justDrank,
+      );
+      expect(slots[1].at, DateTime(2026, 9, 5, 16, 40));
+    });
+
+    test('bugün içilmediyse dilimler aktif başlangıçtan sayılır', () {
+      final yesterday = DateTime(2026, 9, 4, 22, 0);
+      final next = scheduler.next(
+        settings,
+        now,
+        goalReachedToday: false,
+        lastIntakeAt: yesterday,
+      );
+      expect(next, DateTime(2026, 9, 5, 14, 0));
+    });
+
+    test('aktif erteleme sıradaki hatırlatma olarak gösterilir', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final until = DateTime.fromMillisecondsSinceEpoch(
+        DateTime.now().add(const Duration(minutes: 10)).millisecondsSinceEpoch,
+      );
+      await prefs.setInt('water_snooze_until', until.millisecondsSinceEpoch);
+      try {
+        expect(scheduler.snoozeUntil, until);
+        expect(
+          scheduler.next(settings, DateTime.now(), goalReachedToday: false),
+          until,
+        );
+      } finally {
+        await prefs.remove('water_snooze_until');
+      }
+      expect(scheduler.snoozeUntil, isNull);
     });
 
     test('hafta sonu saatleri açıksa cumartesi farklı pencere kullanılır', () {

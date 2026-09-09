@@ -70,6 +70,7 @@ class _WaterAlarmScreenState extends ConsumerState<WaterAlarmScreen> {
         await ref
             .read(waterSchedulerProvider)
             .snooze(s: settings, todayTotalMl: total);
+        await ref.read(waterProvider.notifier).refresh();
       },
       caption: 'Alarm modunda zil, Su İçtim’e basana kadar çalmaya devam eder',
     );

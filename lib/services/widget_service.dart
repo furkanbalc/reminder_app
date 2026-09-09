@@ -92,6 +92,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     final scheduler = WaterScheduler(
       NotificationService(),
       AlarmService(prefs, AlarmKitService()),
+      prefs,
     );
     final next = scheduler.next(
       settings,
