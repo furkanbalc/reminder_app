@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/android_hints.dart';
+import '../../core/utils/dev.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/widgets.dart';
 import '../../data/models/enums.dart';
@@ -105,13 +106,13 @@ class SettingsScreen extends ConsumerWidget {
                         title: 'Hatırlatma aralığı',
                         selected: s.intervalMin,
                         options: [
-                          for (final m in WaterSettings.intervalOptions)
+                          if (kDevTools)
                             PickerOption(
-                              m,
-                              m == WaterSettings.testIntervalMin
-                                  ? '${fmtInterval(m)} (test)'
-                                  : fmtInterval(m),
+                              WaterSettings.devIntervalMin,
+                              '${fmtInterval(WaterSettings.devIntervalMin)} (dev)',
                             ),
+                          for (final m in WaterSettings.intervalOptions)
+                            PickerOption(m, fmtInterval(m)),
                         ],
                       );
                       if (v != null) save(s.copyWith(intervalMin: v));
@@ -321,7 +322,9 @@ class SettingsScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 4),
                 child: Text(
-                  'Tüm verilerin yalnızca bu cihazda saklanır.',
+                  kDevTools
+                      ? 'Geliştirici derlemesi. Tüm verilerin yalnızca bu cihazda saklanır.'
+                      : 'Tüm verilerin yalnızca bu cihazda saklanır.',
                   style: AppText.body(context, size: 12, color: c.mute),
                 ),
               ),

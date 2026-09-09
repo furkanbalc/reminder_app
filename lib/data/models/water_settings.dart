@@ -63,8 +63,11 @@ class WaterSettings {
 
   static const quickAmounts = [200, 330, 500];
   static const glassOptions = [150, 200, 250, 330, 400, 500, 750];
-  static const intervalOptions = [5, 30, 45, 60, 90, 120, 180];
-  static const testIntervalMin = 5;
+  static const intervalOptions = [30, 45, 60, 90, 120, 180];
+
+  /// Yalnızca geliştirici derlemesinde listelenir.
+  static const devIntervalMin = 5;
+  static const minProdIntervalMin = 30;
   static const escalationOptions = [5, 10, 15, 20];
   static const snoozeOptions = [5, 10, 15, 20, 30];
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/dev.dart';
 import '../models/water_settings.dart';
 
 /// Ayarlar tek bir JSON anahtarında saklanır; yeni alanlar eklemek kolay olsun diye.
@@ -22,6 +23,10 @@ class SettingsRepository {
       } catch (_) {
         s = const WaterSettings();
       }
+    }
+    if (!kDevTools && s.intervalMin < WaterSettings.minProdIntervalMin) {
+      // Geliştirici aralığı release'te geçersiz; varsayılana dön.
+      s = s.copyWith(intervalMin: 90);
     }
     return s.copyWith(onboardingDone: _prefs.getBool(_onboarding) ?? false);
   }

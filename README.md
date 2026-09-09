@@ -32,6 +32,12 @@ flutter run
 
 Testler: `flutter test`
 
+Geliştirici araçları (5 dakikalık test aralığı gibi) yalnızca debug derlemede açıktır; release'te görmek için:
+
+```bash
+flutter run --release --dart-define=DEV=true
+```
+
 ## Park edilenler
 
 - **iOS ana ekran widget'ı** ve **AlarmKit canlı etkinlik arayüzü**: her ikisi de Xcode'da ek hedef ve App Groups yetkisi ister; ücretsiz Apple hesabıyla imzalama sorun çıkardığı için şimdilik kapalı. Kaynaklar `ios/SuWidget/` ve `ios/AlarmkitWidget/` altında duruyor, `Runner.entitlements` içinde App Groups yok.
