@@ -2,10 +2,12 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 class AppDatabase {
-  static Future<Database> open() async {
-    final dir = await getDatabasesPath();
+  /// [path] verilmezse uygulamanın veritabanı klasörü kullanılır (testlerde geçici dosya).
+  static Future<Database> open({String? path}) async {
+    final dbPath =
+        path ?? p.join(await getDatabasesPath(), 'su_hatirlatici.db');
     return openDatabase(
-      p.join(dir, 'su_hatirlatici.db'),
+      dbPath,
       version: 2,
       onCreate: (db, version) async {
         await db.execute('''

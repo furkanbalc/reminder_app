@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../core/utils/format.dart';
+import '../core/utils/stats.dart';
 import '../data/models/enums.dart';
 import '../data/models/reminder.dart';
 import '../data/models/water_entry.dart';
@@ -221,7 +222,7 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
         .toList();
     final todayTotal = totals[today] ?? 0;
     final lastIntake = entries.isEmpty ? null : entries.last.timestamp;
-    final streak = _streak(totals, today, s.goalMl);
+    final streak = computeStreak(totals, today, s.goalMl);
     final next = ref
         .read(waterSchedulerProvider)
         .next(
@@ -240,18 +241,6 @@ class WaterNotifier extends AsyncNotifier<WaterState> {
       lastIntakeAt: lastIntake,
       streakDays: streak,
     );
-  }
-
-  static int _streak(Map<DateTime, int> totals, DateTime today, int goalMl) {
-    var day = (totals[today] ?? 0) >= goalMl
-        ? today
-        : today.subtract(const Duration(days: 1));
-    var count = 0;
-    while ((totals[day] ?? 0) >= goalMl && count < 365) {
-      count++;
-      day = day.subtract(const Duration(days: 1));
-    }
-    return count;
   }
 
   Future<AddResult> addEntry(int amountMl, {DateTime? at}) async {
